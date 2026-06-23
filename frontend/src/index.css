@@ -38,6 +38,10 @@ body {
   @apply bg-[#1A1A1A] border border-[#333] rounded-2xl;
 }
 
+.card-light {
+  @apply bg-[#242424] border border-[#333] rounded-2xl;
+}
+
 .input-field {
   @apply w-full bg-[#111] border border-[#333] rounded-xl px-4 py-3 text-[#FFF8F0] placeholder-gray-500 focus:outline-none focus:border-[#FF6B1A] transition-colors;
 }

@@ -50,7 +50,7 @@ export default function AdminUsersPage() {
       </div>
 
       {showForm && (
-        <div className="card p-6 mb-6 grid md:grid-cols-2 gap-4">
+        <div className="card-light p-6 mb-6 grid md:grid-cols-2 gap-4">
           <input className="input-field" placeholder="Email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
           <input className="input-field" placeholder="Contraseña" type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />
           <input className="input-field" placeholder="Nombre" value={form.first_name} onChange={(e) => setForm({ ...form, first_name: e.target.value })} />
@@ -71,7 +71,7 @@ export default function AdminUsersPage() {
         </div>
       )}
 
-      <div className="card overflow-x-auto">
+      <div className="card-light overflow-x-auto">
         <table className="w-full">
           <thead>
             <tr className="border-b border-[#333] text-left text-xs text-gray-500 uppercase">
