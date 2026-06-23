@@ -1,127 +1,68 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Users, Award, Clock, Star } from 'lucide-react';
-import PublicLayout from '../components/layout/PublicLayout';
-import { classesApi, catalogApi } from '../services/api';
-import type { DanceClass, DanceStyle } from '../types';
+import { Star } from 'lucide-react';
+import Navbar from '../components/Navbar';
+import { choreoApi } from '../services/api';
+import type { Choreography } from '../types';
+import { GENRE_LABELS, formatPrice } from '../types';
 
 export default function LandingPage() {
-  const [classes, setClasses] = useState<DanceClass[]>([]);
-  const [styles, setStyles] = useState<DanceStyle[]>([]);
+  const [featured, setFeatured] = useState<Choreography[]>([]);
 
   useEffect(() => {
-    classesApi.getPublic().then((r) => setClasses(r.data)).catch(() => {});
-    catalogApi.getDanceStylesPublic().then((r) => setStyles(r.data)).catch(() => {});
+    choreoApi.getFeatured().then((r) => setFeatured(r.data)).catch(() => {});
   }, []);
 
-  const formatCurrency = (n: number) =>
-    new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(n);
-
   return (
-    <PublicLayout>
-      <section id="inicio" className="relative min-h-screen flex items-center pt-20">
-        <div className="absolute inset-0 bg-gradient-to-br from-violet-900/30 via-[#0f0a1a] to-amber-900/20" />
-        <div className="absolute inset-0 opacity-20" style={{
-          backgroundImage: 'radial-gradient(circle at 25% 25%, #7c3aed 0%, transparent 50%), radial-gradient(circle at 75% 75%, #f59e0b 0%, transparent 50%)'
-        }} />
-        <div className="relative max-w-7xl mx-auto px-6 py-20 grid lg:grid-cols-2 gap-12 items-center">
-          <div>
-            <p className="text-violet-400 font-medium mb-4 tracking-wider uppercase text-sm">Academia de Baile</p>
-            <h1 className="font-display text-5xl lg:text-7xl font-bold leading-tight mb-6">
-              Expresa tu <span className="gradient-text">pasión</span> por el baile
-            </h1>
-            <p className="text-gray-400 text-lg mb-8 max-w-lg">
-              Descubre el mundo del baile con instructores profesionales. Salsa, bachata, hip hop y más en un ambiente único.
-            </p>
-            <div className="flex flex-wrap gap-4">
-              <Link to="/register" className="btn-primary flex items-center gap-2 px-6 py-3">
-                Inscríbete ahora <ArrowRight className="w-4 h-4" />
-              </Link>
-              <a href="#clases" className="btn-secondary px-6 py-3">Ver clases</a>
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            {[
-              { icon: Users, label: 'Estudiantes activos', value: '200+' },
-              { icon: Award, label: 'Instructores', value: '15+' },
-              { icon: Clock, label: 'Clases semanales', value: '50+' },
-              { icon: Star, label: 'Estilos de baile', value: '6+' },
-            ].map((stat) => (
-              <div key={stat.label} className="card p-6 text-center">
-                <stat.icon className="w-8 h-8 text-violet-400 mx-auto mb-3" />
-                <div className="text-2xl font-bold gradient-text">{stat.value}</div>
-                <div className="text-sm text-gray-500">{stat.label}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section id="estilos" className="py-20 px-6">
-        <div className="max-w-7xl mx-auto">
-          <h2 className="font-display text-4xl font-bold text-center mb-4">Estilos de baile</h2>
-          <p className="text-gray-400 text-center mb-12 max-w-2xl mx-auto">
-            Explora nuestra variedad de disciplinas para todos los niveles
-          </p>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {styles.map((style) => (
-              <div key={style.id} className="card p-6 hover:border-violet-500/50 transition-colors group">
-                <div className="w-12 h-12 rounded-full bg-violet-600/20 flex items-center justify-center mb-4 group-hover:bg-violet-600/30 transition-colors">
-                  <span className="text-violet-400 font-bold text-lg">{style.name[0]}</span>
-                </div>
-                <h3 className="text-xl font-semibold mb-2">{style.name}</h3>
-                <p className="text-gray-400 text-sm mb-3">{style.description}</p>
-                <span className="text-xs px-3 py-1 rounded-full bg-amber-500/10 text-amber-400 capitalize">
-                  {style.difficulty_level}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section id="clases" className="py-20 px-6 bg-[#1a1225]/50">
-        <div className="max-w-7xl mx-auto">
-          <h2 className="font-display text-4xl font-bold text-center mb-4">Clases disponibles</h2>
-          <p className="text-gray-400 text-center mb-12">Horarios y tarifas de nuestras clases activas</p>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {classes.map((cls) => (
-              <div key={cls.id} className="card p-6 flex flex-col">
-                <div className="flex justify-between items-start mb-4">
-                  <span className="text-xs px-3 py-1 rounded-full bg-violet-600/20 text-violet-300">{cls.dance_style}</span>
-                  <span className="text-amber-400 font-semibold">{formatCurrency(cls.monthly_fee)}/mes</span>
-                </div>
-                <h3 className="text-xl font-semibold mb-2">{cls.name}</h3>
-                <p className="text-gray-400 text-sm mb-4 flex-1">{cls.description}</p>
-                <div className="space-y-2 text-sm text-gray-500">
-                  <p>👤 {cls.instructor_name}</p>
-                  <p>📅 {cls.day_name} · {cls.start_time?.slice(0, 5)} - {cls.end_time?.slice(0, 5)}</p>
-                  <p>👥 {cls.enrolled_count || 0}/{cls.max_students} cupos</p>
-                </div>
-                <Link to="/register" className="btn-primary text-center mt-4 text-sm">
-                  Inscribirme
-                </Link>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section id="contacto" className="py-20 px-6">
-        <div className="max-w-3xl mx-auto text-center">
-          <h2 className="font-display text-4xl font-bold mb-4">¿Listo para bailar?</h2>
-          <p className="text-gray-400 mb-8">
-            Únete a nuestra comunidad de bailarines. Cali, Colombia · info@danceacademy.com · +57 300 123 4567
-          </p>
-          <Link to="/register" className="btn-primary inline-flex items-center gap-2 px-8 py-3">
-            Comenzar ahora <ArrowRight className="w-4 h-4" />
+    <div className="min-h-screen">
+      <Navbar />
+      <section className="pt-32 pb-16 px-6 text-center">
+        <h1 className="font-display text-6xl md:text-8xl tracking-wide leading-none mb-4">
+          APRENDE A BAILAR<br />
+          <span className="text-[#FF6B1A]">CON LOS MEJORES</span>
+        </h1>
+        <p className="text-gray-400 max-w-xl mx-auto mb-8 text-lg">
+          Descubre coreografías profesionales en salsa, bachata, hip-hop y más. Aprende a tu ritmo desde casa.
+        </p>
+        <div className="flex justify-center gap-4 mb-16">
+          <Link to="/catalog" className="gradient-btn">Ver catálogo</Link>
+          <Link to="/register" className="border border-[#FF6B1A] text-[#FF6B1A] rounded-full px-6 py-3 font-semibold hover:bg-[#FF6B1A]/10 transition-colors">
+            Unirme gratis
           </Link>
         </div>
+        <div className="flex justify-center gap-16 border-t border-[#333] pt-8 max-w-2xl mx-auto">
+          <div><span className="font-display text-3xl text-[#FF6B1A]">120+</span><p className="text-sm text-gray-500">Coreografías</p></div>
+          <div><span className="font-display text-3xl text-[#FF6B1A]">18</span><p className="text-sm text-gray-500">Profesores</p></div>
+          <div className="flex items-center gap-1"><span className="font-display text-3xl text-[#FF6B1A]">4.8</span><Star className="w-5 h-5 text-[#FF6B1A] fill-[#FF6B1A]" /></div>
+        </div>
       </section>
 
-      <footer className="border-t border-[#2d1f42] py-8 px-6 text-center text-gray-500 text-sm">
-        <p>© 2026 Dance Academy · Proyecto Final DS1 · Universidad del Valle</p>
+      <section className="px-6 pb-20 max-w-7xl mx-auto">
+        <h2 className="font-display text-3xl tracking-wide mb-8">COREOGRAFÍAS DESTACADAS</h2>
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {featured.map((c) => (
+            <div key={c.id} className="card overflow-hidden group hover:border-[#FF6B1A]/50 transition-colors">
+              <div className="h-40 bg-gradient-to-br from-[#FF6B1A]/20 to-[#E91E8C]/20 flex items-center justify-center text-6xl relative">
+                {c.thumbnail_emoji}
+                <span className="tag-fuchsia absolute top-3 right-3">{GENRE_LABELS[c.genre] || c.genre}</span>
+              </div>
+              <div className="p-4">
+                <h3 className="font-semibold mb-2">{c.title}</h3>
+                <div className="flex justify-between items-center">
+                  <span className="price-orange">{formatPrice(c.price)}</span>
+                  <span className="flex items-center gap-1 text-sm text-[#FF6B1A]">
+                    <Star className="w-3 h-3 fill-[#FF6B1A]" />{c.rating}
+                  </span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <footer className="border-t border-[#333] py-8 text-center text-gray-500 text-sm">
+        © 2026 RITMOFLOW · Proyecto Final DS1 · Universidad del Valle
       </footer>
-    </PublicLayout>
+    </div>
   );
 }

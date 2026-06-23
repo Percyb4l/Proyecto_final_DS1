@@ -1,6 +1,11 @@
 node_modules/
-dist/
+__pycache__/
+*.pyc
 .env
 *.log
 .DS_Store
-target/
+frontend/dist/
+db.sqlite3
+*.egg-info/
+.venv/
+venv/

@@ -1,27 +1,19 @@
 import axios from 'axios';
 
-const api = axios.create({
-  baseURL: '/api',
-  headers: { 'Content-Type': 'application/json' },
-});
+const api = axios.create({ baseURL: '/api', headers: { 'Content-Type': 'application/json' } });
 
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
+  const token = localStorage.getItem('access');
+  if (token) config.headers.Authorization = `Bearer ${token}`;
   return config;
 });
 
 api.interceptors.response.use(
-  (response) => response,
+  (r) => r,
   (error) => {
-    if (error.response?.status === 401) {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      if (!window.location.pathname.includes('/login')) {
-        window.location.href = '/login';
-      }
+    if (error.response?.status === 401 && !window.location.pathname.includes('/login')) {
+      localStorage.clear();
+      window.location.href = '/login';
     }
     return Promise.reject(error);
   }
@@ -30,57 +22,47 @@ api.interceptors.response.use(
 export default api;
 
 export const authApi = {
-  login: (email: string, password: string) => api.post('/auth/login', { email, password }),
-  register: (data: Record<string, string>) => api.post('/auth/register', data),
-  me: () => api.get('/auth/me'),
+  getCaptcha: () => api.get('/auth/captcha/'),
+  login: (data: object) => api.post('/auth/login/', data),
+  register: (data: object) => api.post('/auth/register/', data),
+  me: () => api.get('/auth/me/'),
+  updateMe: (data: object) => api.patch('/auth/me/', data),
 };
 
-export const studentsApi = {
-  getAll: () => api.get('/students'),
-  getById: (id: number) => api.get(`/students/${id}`),
-  create: (data: Record<string, unknown>) => api.post('/students', data),
-  update: (id: number, data: Record<string, unknown>) => api.put(`/students/${id}`, data),
-  delete: (id: number) => api.delete(`/students/${id}`),
+export const choreoApi = {
+  getAll: (params?: object) => api.get('/choreographies/', { params }),
+  getFeatured: () => api.get('/choreographies/featured/'),
+  getHotSales: () => api.get('/choreographies/hot_sales/'),
+  getById: (id: number) => api.get(`/choreographies/${id}/`),
+  create: (data: object) => api.post('/choreographies/', data),
+  update: (id: number, data: object) => api.patch(`/choreographies/${id}/`, data),
+  delete: (id: number) => api.delete(`/choreographies/${id}/`),
+  approve: (id: number) => api.post(`/choreographies/${id}/approve/`),
 };
 
-export const instructorsApi = {
-  getAll: () => api.get('/instructors'),
-  create: (data: Record<string, unknown>) => api.post('/instructors', data),
-  update: (id: number, data: Record<string, unknown>) => api.put(`/instructors/${id}`, data),
-  delete: (id: number) => api.delete(`/instructors/${id}`),
+export const cartApi = {
+  get: () => api.get('/cart/'),
+  add: (choreographyId: number) => api.post('/cart/add/', { choreography_id: choreographyId }),
+  remove: (itemId: number) => api.delete(`/cart/items/${itemId}/`),
+  clear: () => api.delete('/cart/clear/'),
 };
 
-export const classesApi = {
-  getAll: () => api.get('/classes'),
-  getPublic: () => api.get('/classes/public'),
-  create: (data: Record<string, unknown>) => api.post('/classes', data),
-  update: (id: number, data: Record<string, unknown>) => api.put(`/classes/${id}`, data),
-  delete: (id: number) => api.delete(`/classes/${id}`),
+export const salesApi = {
+  checkout: (data: object) => api.post('/sales/checkout/', data),
+  mySales: () => api.get('/sales/my/'),
+  myPurchases: () => api.get('/sales/purchases/'),
+  allSales: () => api.get('/sales/all/'),
 };
 
-export const enrollmentsApi = {
-  getAll: () => api.get('/enrollments'),
-  create: (data: { studentId?: number; classId: number }) => api.post('/enrollments', data),
-  updateStatus: (id: number, status: string) => api.patch(`/enrollments/${id}/status`, { status }),
+export const dashboardApi = {
+  admin: () => api.get('/auth/dashboard/admin/'),
+  client: () => api.get('/auth/dashboard/client/'),
 };
 
-export const paymentsApi = {
-  getAll: () => api.get('/payments'),
-  getMy: () => api.get('/payments/my'),
-  pay: (id: number, data: { paymentMethod?: string; notes?: string }) =>
-    api.patch(`/payments/${id}/pay`, data),
-};
-
-export const attendanceApi = {
-  getByClass: (classId: number, date?: string) =>
-    api.get(`/attendance/class/${classId}`, { params: { date } }),
-  record: (data: Record<string, unknown>) => api.post('/attendance', data),
-  recordBulk: (records: Record<string, unknown>[]) => api.post('/attendance/bulk', { records }),
-};
-
-export const catalogApi = {
-  getDanceStyles: () => api.get('/dance-styles'),
-  getDanceStylesPublic: () => api.get('/dance-styles/public'),
-  getClassrooms: () => api.get('/classrooms'),
-  getDashboard: () => api.get('/dashboard'),
+export const usersApi = {
+  getInternal: (params?: object) => api.get('/auth/internal/', { params }),
+  createInternal: (data: object) => api.post('/auth/internal/', data),
+  updateInternal: (id: number, data: object) => api.patch(`/auth/internal/${id}/`, data),
+  deleteInternal: (id: number) => api.delete(`/auth/internal/${id}/`),
+  getProfessors: () => api.get('/auth/professors/'),
 };

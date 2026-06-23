@@ -1,13 +1,14 @@
 {
-  "name": "dance-academy",
+  "name": "ritmoflow",
   "version": "1.0.0",
   "private": true,
-  "description": "Sistema de gestión para academia de baile - Proyecto Final DS1",
+  "description": "RITMOFLOW - Academia de baile en línea - Proyecto Final DS1",
   "scripts": {
-    "install:all": "cd backend && npm install && cd ../frontend && npm install",
-    "seed": "cd backend && npm run seed",
-    "dev:backend": "cd backend && npm run dev",
+    "install:all": "pip install -r requirements.txt && cd frontend && npm install",
+    "seed": "python3 manage.py seed_data",
+    "dev:backend": "python3 manage.py runserver",
     "dev:frontend": "cd frontend && npm run dev",
+    "migrate": "python3 manage.py migrate",
     "build": "cd frontend && npm run build"
   }
 }
