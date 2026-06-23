@@ -44,7 +44,7 @@ export default function AdminChoreographiesPage() {
         </select>
       </div>
 
-      <div className="card overflow-x-auto">
+      <div className="card-light overflow-x-auto">
         <table className="w-full">
           <thead>
             <tr className="border-b border-[#333] text-left text-xs text-gray-500 uppercase">
