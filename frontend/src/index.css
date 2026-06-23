@@ -1,0 +1,56 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #7c3aed;
+  --color-primary-dark: #5b21b6;
+  --color-accent: #f59e0b;
+  --color-dark: #0f0a1a;
+  --color-dark-card: #1a1225;
+  --color-dark-border: #2d1f42;
+  --font-display: "Playfair Display", serif;
+  --font-body: "Inter", sans-serif;
+}
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;600;700&display=swap');
+
+body {
+  font-family: var(--font-body);
+  background-color: var(--color-dark);
+  color: #f3f4f6;
+  margin: 0;
+}
+
+.font-display {
+  font-family: var(--font-display);
+}
+
+.gradient-text {
+  background: linear-gradient(135deg, #a78bfa, #f59e0b);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.card {
+  @apply bg-[#1a1225] border border-[#2d1f42] rounded-xl;
+}
+
+.btn-primary {
+  @apply bg-violet-600 hover:bg-violet-700 text-white font-medium px-4 py-2 rounded-lg transition-colors;
+}
+
+.btn-secondary {
+  @apply bg-transparent border border-violet-500 text-violet-300 hover:bg-violet-500/10 font-medium px-4 py-2 rounded-lg transition-colors;
+}
+
+.input-field {
+  @apply w-full bg-[#0f0a1a] border border-[#2d1f42] rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-violet-500 transition-colors;
+}
+
+.table-header {
+  @apply text-left text-xs font-semibold text-gray-400 uppercase tracking-wider px-4 py-3;
+}
+
+.table-cell {
+  @apply px-4 py-3 text-sm text-gray-300;
+}
