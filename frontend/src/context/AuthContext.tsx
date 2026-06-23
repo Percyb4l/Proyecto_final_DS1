@@ -6,12 +6,14 @@ import { authApi } from '../services/api';
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  register: (data: Record<string, string>) => Promise<void>;
+  login: (data: object) => Promise<void>;
+  register: (data: object) => Promise<void>;
   logout: () => void;
   isAdmin: boolean;
-  isInstructor: boolean;
-  isStudent: boolean;
+  isDirector: boolean;
+  isProfessor: boolean;
+  isClient: boolean;
+  isInternal: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -21,56 +23,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    const saved = localStorage.getItem('user');
-    if (token && saved) {
-      setUser(JSON.parse(saved));
-      authApi.me().then((res) => {
-        setUser(res.data);
-        localStorage.setItem('user', JSON.stringify(res.data));
-      }).catch(() => {
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        setUser(null);
-      }).finally(() => setLoading(false));
+    const token = localStorage.getItem('access');
+    if (token) {
+      authApi.me().then((r) => setUser(r.data)).catch(() => localStorage.clear()).finally(() => setLoading(false));
     } else {
       setLoading(false);
     }
   }, []);
 
-  const login = async (email: string, password: string) => {
-    const res = await authApi.login(email, password);
-    localStorage.setItem('token', res.data.token);
+  const login = async (data: object) => {
+    const res = await authApi.login(data);
+    localStorage.setItem('access', res.data.access);
+    localStorage.setItem('refresh', res.data.refresh);
     localStorage.setItem('user', JSON.stringify(res.data.user));
     setUser(res.data.user);
   };
 
-  const register = async (data: Record<string, string>) => {
+  const register = async (data: object) => {
     const res = await authApi.register(data);
-    localStorage.setItem('token', res.data.token);
+    localStorage.setItem('access', res.data.access);
+    localStorage.setItem('refresh', res.data.refresh);
     localStorage.setItem('user', JSON.stringify(res.data.user));
     setUser(res.data.user);
   };
 
-  const logout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    setUser(null);
-  };
+  const logout = () => { localStorage.clear(); setUser(null); };
 
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        loading,
-        login,
-        register,
-        logout,
-        isAdmin: user?.role === 'admin',
-        isInstructor: user?.role === 'instructor',
-        isStudent: user?.role === 'student',
-      }}
-    >
+    <AuthContext.Provider value={{
+      user, loading, login, register, logout,
+      isAdmin: user?.role === 'admin',
+      isDirector: user?.role === 'director',
+      isProfessor: user?.role === 'professor',
+      isClient: user?.role === 'client',
+      isInternal: ['admin', 'director', 'professor'].includes(user?.role || ''),
+    }}>
       {children}
     </AuthContext.Provider>
   );
@@ -78,6 +65,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 export function useAuth() {
   const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error('useAuth debe usarse dentro de AuthProvider');
+  if (!ctx) throw new Error('useAuth requiere AuthProvider');
   return ctx;
 }

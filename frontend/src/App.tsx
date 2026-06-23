@@ -1,20 +1,20 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import LandingPage from './pages/LandingPage';
+import CatalogPage from './pages/CatalogPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
-import DashboardPage from './pages/DashboardPage';
-import StudentsPage from './pages/StudentsPage';
-import InstructorsPage from './pages/InstructorsPage';
-import ClassesPage from './pages/ClassesPage';
-import EnrollmentsPage from './pages/EnrollmentsPage';
-import PaymentsPage from './pages/PaymentsPage';
-import AttendancePage from './pages/AttendancePage';
+import CartPage from './pages/CartPage';
+import ClientDashboardPage from './pages/ClientDashboardPage';
+import AdminDashboardPage from './pages/AdminDashboardPage';
+import AdminUsersPage from './pages/AdminUsersPage';
+import AdminChoreographiesPage from './pages/AdminChoreographiesPage';
 
-function PrivateRoute({ children }: { children: React.ReactNode }) {
+function PrivateRoute({ children, roles }: { children: React.ReactNode; roles?: string[] }) {
   const { user, loading } = useAuth();
-  if (loading) return <div className="min-h-screen flex items-center justify-center bg-[#0f0a1a]"><div className="text-violet-400">Cargando...</div></div>;
+  if (loading) return <div className="min-h-screen flex items-center justify-center"><p className="text-[#FF6B1A]">Cargando...</p></div>;
   if (!user) return <Navigate to="/login" />;
+  if (roles && !roles.includes(user.role)) return <Navigate to="/" />;
   return <>{children}</>;
 }
 
@@ -22,15 +22,16 @@ function AppRoutes() {
   return (
     <Routes>
       <Route path="/" element={<LandingPage />} />
+      <Route path="/catalog" element={<CatalogPage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
-      <Route path="/dashboard" element={<PrivateRoute><DashboardPage /></PrivateRoute>} />
-      <Route path="/students" element={<PrivateRoute><StudentsPage /></PrivateRoute>} />
-      <Route path="/instructors" element={<PrivateRoute><InstructorsPage /></PrivateRoute>} />
-      <Route path="/classes" element={<PrivateRoute><ClassesPage /></PrivateRoute>} />
-      <Route path="/enrollments" element={<PrivateRoute><EnrollmentsPage /></PrivateRoute>} />
-      <Route path="/payments" element={<PrivateRoute><PaymentsPage /></PrivateRoute>} />
-      <Route path="/attendance" element={<PrivateRoute><AttendancePage /></PrivateRoute>} />
+      <Route path="/cart" element={<PrivateRoute roles={['client']}><CartPage /></PrivateRoute>} />
+      <Route path="/dashboard" element={<PrivateRoute roles={['client']}><ClientDashboardPage /></PrivateRoute>} />
+      <Route path="/admin" element={<PrivateRoute roles={['admin', 'director']}><AdminDashboardPage /></PrivateRoute>} />
+      <Route path="/admin/users" element={<PrivateRoute roles={['admin', 'director']}><AdminUsersPage /></PrivateRoute>} />
+      <Route path="/admin/choreographies" element={<PrivateRoute roles={['admin', 'director', 'professor']}><AdminChoreographiesPage /></PrivateRoute>} />
+      <Route path="/admin/sales" element={<PrivateRoute roles={['admin', 'director']}><AdminDashboardPage /></PrivateRoute>} />
+      <Route path="/admin/professors" element={<PrivateRoute roles={['admin', 'director']}><AdminUsersPage /></PrivateRoute>} />
       <Route path="*" element={<Navigate to="/" />} />
     </Routes>
   );

@@ -1,111 +1,65 @@
 import { useState } from 'react';
 import type { FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Music2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 export default function RegisterPage() {
   const [form, setForm] = useState({
-    email: '', password: '', confirmPassword: '',
-    firstName: '', lastName: '', documentId: '', phone: '',
+    firstName: '', lastName: '', email: '', password: '', password_confirm: '',
+    document_type: 'CC', document_number: '', phone: '',
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const { register } = useAuth();
   const navigate = useNavigate();
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
-
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (form.password !== form.confirmPassword) {
-      setError('Las contraseñas no coinciden');
-      return;
-    }
+    if (form.password !== form.password_confirm) { setError('Las contraseñas no coinciden'); return; }
     setError('');
     setLoading(true);
     try {
       await register({
-        email: form.email,
-        password: form.password,
-        firstName: form.firstName,
-        lastName: form.lastName,
-        documentId: form.documentId,
-        phone: form.phone,
+        first_name: form.firstName, last_name: form.lastName,
+        email: form.email, password: form.password, password_confirm: form.password_confirm,
+        document_type: form.document_type, document_number: form.document_number, phone: form.phone,
       });
       navigate('/dashboard');
     } catch (err: unknown) {
-      const axiosErr = err as { response?: { data?: { error?: string } } };
-      setError(axiosErr.response?.data?.error || 'Error al registrarse');
+      const axiosErr = err as { response?: { data?: Record<string, string> } };
+      const data = axiosErr.response?.data;
+      setError(Object.values(data || {})[0] as string || 'Error al registrarse');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-12 bg-[#0f0a1a]">
-      <div className="w-full max-w-lg">
-        <div className="text-center mb-8">
-          <Link to="/" className="inline-flex items-center gap-2 mb-4">
-            <Music2 className="w-10 h-10 text-violet-400" />
-          </Link>
-          <h1 className="font-display text-3xl font-bold gradient-text">Únete a nosotros</h1>
-          <p className="text-gray-400 mt-2">Crea tu cuenta de estudiante</p>
+    <div className="min-h-screen flex items-center justify-center px-4 py-12">
+      <div className="w-full max-w-md card p-8">
+        <div className="text-center mb-6">
+          <Link to="/" className="font-display text-3xl tracking-widest">RITMO<span className="text-[#FF6B1A]">FLOW</span></Link>
+          <h1 className="font-display text-2xl tracking-wide mt-4">CREAR CUENTA</h1>
         </div>
 
-        <form onSubmit={handleSubmit} className="card p-8 space-y-4">
-          {error && (
-            <div className="bg-red-500/10 border border-red-500/30 text-red-400 px-4 py-3 rounded-lg text-sm">{error}</div>
-          )}
+        {error && <div className="bg-red-500/10 border border-red-500/30 text-red-400 px-4 py-3 rounded-xl text-sm mb-4">{error}</div>}
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm text-gray-400 mb-1.5">Nombre</label>
-              <input name="firstName" value={form.firstName} onChange={handleChange} className="input-field" required />
-            </div>
-            <div>
-              <label className="block text-sm text-gray-400 mb-1.5">Apellido</label>
-              <input name="lastName" value={form.lastName} onChange={handleChange} className="input-field" required />
-            </div>
+        <form onSubmit={handleSubmit} className="space-y-3">
+          <div className="grid grid-cols-2 gap-3">
+            <input className="input-field" placeholder="Nombre" value={form.firstName} onChange={(e) => setForm({ ...form, firstName: e.target.value })} required />
+            <input className="input-field" placeholder="Apellido" value={form.lastName} onChange={(e) => setForm({ ...form, lastName: e.target.value })} required />
           </div>
-
-          <div>
-            <label className="block text-sm text-gray-400 mb-1.5">Documento de identidad</label>
-            <input name="documentId" value={form.documentId} onChange={handleChange} className="input-field" required />
-          </div>
-
-          <div>
-            <label className="block text-sm text-gray-400 mb-1.5">Teléfono</label>
-            <input name="phone" value={form.phone} onChange={handleChange} className="input-field" />
-          </div>
-
-          <div>
-            <label className="block text-sm text-gray-400 mb-1.5">Correo electrónico</label>
-            <input type="email" name="email" value={form.email} onChange={handleChange} className="input-field" required />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm text-gray-400 mb-1.5">Contraseña</label>
-              <input type="password" name="password" value={form.password} onChange={handleChange} className="input-field" required />
-            </div>
-            <div>
-              <label className="block text-sm text-gray-400 mb-1.5">Confirmar</label>
-              <input type="password" name="confirmPassword" value={form.confirmPassword} onChange={handleChange} className="input-field" required />
-            </div>
-          </div>
-
-          <button type="submit" disabled={loading} className="btn-primary w-full py-3">
-            {loading ? 'Registrando...' : 'Crear cuenta'}
-          </button>
-
-          <p className="text-center text-sm text-gray-400">
-            ¿Ya tienes cuenta?{' '}
-            <Link to="/login" className="text-violet-400 hover:text-violet-300">Inicia sesión</Link>
-          </p>
+          <input type="email" className="input-field" placeholder="Correo electrónico" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} required />
+          <input className="input-field" placeholder="Documento" value={form.document_number} onChange={(e) => setForm({ ...form, document_number: e.target.value })} required />
+          <input className="input-field" placeholder="Teléfono" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
+          <input type="password" className="input-field" placeholder="Contraseña" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} required />
+          <input type="password" className="input-field" placeholder="Confirmar contraseña" value={form.password_confirm} onChange={(e) => setForm({ ...form, password_confirm: e.target.value })} required />
+          <button type="submit" disabled={loading} className="gradient-btn w-full mt-2">{loading ? 'Registrando...' : 'Crear cuenta'}</button>
         </form>
+
+        <p className="text-center text-sm text-gray-500 mt-6">
+          ¿Ya tienes cuenta? <Link to="/login" className="text-[#E91E8C]">Inicia sesión</Link>
+        </p>
       </div>
     </div>
   );

@@ -1,109 +1,68 @@
 export interface User {
   id: number;
   email: string;
-  role: 'admin' | 'instructor' | 'student';
-  profile?: Student | Instructor;
-}
-
-export interface Student {
-  id: number;
-  user_id: number;
   first_name: string;
   last_name: string;
-  document_id: string;
+  full_name: string;
+  role: 'admin' | 'director' | 'professor' | 'client';
   phone?: string;
-  birth_date?: string;
-  address?: string;
-  emergency_contact?: string;
-  email?: string;
+  billing_address?: string;
+  city?: string;
+  document_number?: string;
 }
 
-export interface Instructor {
+export interface ChoreographyVideo {
   id: number;
-  user_id: number;
-  first_name: string;
-  last_name: string;
-  document_id: string;
-  phone?: string;
-  specialty?: string;
-  bio?: string;
-  email?: string;
+  part_number: number;
+  title: string;
+  video_url: string;
 }
 
-export interface DanceClass {
+export interface Choreography {
   id: number;
-  name: string;
-  dance_style: string;
-  difficulty_level?: string;
-  instructor_name: string;
-  classroom_name?: string;
-  day_of_week: number;
-  day_name?: string;
-  start_time: string;
-  end_time: string;
-  max_students: number;
-  enrolled_count?: number;
-  monthly_fee: number;
+  title: string;
+  song_name: string;
+  genre: string;
+  difficulty: string;
   description?: string;
-  is_active?: boolean;
-  dance_style_id?: number;
-  instructor_id?: number;
-  classroom_id?: number;
+  price: number | string;
+  sales_count: number;
+  status: string;
+  thumbnail_emoji: string;
+  rating: number | string;
+  professor_name: string;
+  video_count: number;
+  videos?: ChoreographyVideo[];
 }
 
-export interface Enrollment {
+export interface CartItem {
   id: number;
-  student_id: number;
-  class_id: number;
-  student_name: string;
-  class_name: string;
-  dance_style: string;
-  monthly_fee: number;
-  enrollment_date: string;
-  status: 'active' | 'cancelled' | 'completed';
-  document_id?: string;
+  choreography: Choreography;
+  subtotal: number;
 }
 
-export interface Payment {
+export interface Cart {
+  items: CartItem[];
+  total: number;
+  item_count: number;
+}
+
+export interface PurchaseAccess {
   id: number;
-  enrollment_id: number;
-  amount: number;
-  due_date: string;
-  paid_date?: string;
-  status: 'pending' | 'paid' | 'overdue';
-  payment_method?: string;
-  student_name?: string;
-  class_name?: string;
-  notes?: string;
+  choreography: Choreography;
+  videos_watched: number;
+  progress_percent: number;
+  purchased_at: string;
 }
 
-export interface DanceStyle {
-  id: number;
-  name: string;
-  description?: string;
-  difficulty_level: string;
-}
+export const GENRE_LABELS: Record<string, string> = {
+  salsa: 'Salsa', bachata: 'Bachata', merengue: 'Merengue',
+  hip_hop: 'Hip-Hop', pop: 'Pop', reggaeton: 'Reggaeton', contemporaneo: 'Contemporáneo',
+};
 
-export interface Classroom {
-  id: number;
-  name: string;
-  capacity: number;
-  location?: string;
-}
+export const DIFFICULTY_LABELS: Record<string, string> = {
+  basic: 'Básico', intermediate: 'Intermedio', advanced: 'Avanzado',
+};
 
-export interface DashboardStats {
-  students: number;
-  instructors: number;
-  classes: number;
-  activeEnrollments: number;
-  totalRevenue: number;
-  pendingPayments: number;
-}
-
-export interface AttendanceRecord {
-  enrollment_id: number;
-  student_name: string;
-  attendance_id?: number;
-  status?: string;
-  class_date?: string;
-}
+export const formatPrice = (price: number | string) =>
+  new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(Number(price));
