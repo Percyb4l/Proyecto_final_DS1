@@ -19,8 +19,11 @@ export default function Navbar() {
           </Link>
           {user ? (
             <>
+              <Link to="/profile" className="text-sm text-[#FFF8F0] hover:text-[#FF6B1A] transition-colors">
+                Mi Perfil
+              </Link>
               <Link to={accountPath} className="text-sm text-[#FFF8F0] hover:text-[#FF6B1A] transition-colors">
-                Mi Cuenta
+                Dashboard
               </Link>
               {user.role === 'client' && (
                 <Link to="/cart" className="text-[#FFF8F0] hover:text-[#FF6B1A] transition-colors">

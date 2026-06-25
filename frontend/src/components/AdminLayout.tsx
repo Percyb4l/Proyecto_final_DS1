@@ -46,7 +46,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             );
           })}
         </nav>
-        <div className="p-4 border-t border-[#333]">
+        <div className="p-4 border-t border-[#333] space-y-2">
+          <Link to="/profile" className="flex items-center gap-2 text-sm text-gray-400 hover:text-white">
+            Mi perfil
+          </Link>
           <button onClick={logout} className="flex items-center gap-2 text-sm text-red-400 hover:text-red-300">
             <LogOut className="w-4 h-4" /> Cerrar sesión
           </button>
