@@ -3,10 +3,15 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.db import transaction
+from django.shortcuts import get_object_or_404
 
 from users.permissions import IsAdminOrDirector, IsClient
+from choreographies.models import ChoreographyVideo
 from .models import Sale, SaleItem, PurchaseAccess
-from .serializers import SaleSerializer, CheckoutSerializer, PurchaseAccessSerializer
+from .serializers import (
+    SaleSerializer, CheckoutSerializer, PurchaseAccessSerializer,
+    PurchaseAccessDetailSerializer, MarkVideoWatchedSerializer,
+)
 from cart.models import Cart
 
 
@@ -63,6 +68,42 @@ def checkout(request):
         user.save()
 
     return Response(SaleSerializer(sale).data, status=status.HTTP_201_CREATED)
+
+
+def _client_purchase_or_404(user, purchase_id):
+    return get_object_or_404(
+        PurchaseAccess.objects.select_related('choreography').prefetch_related('choreography__videos'),
+        id=purchase_id,
+        client=user,
+    )
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated, IsClient])
+def purchase_detail(request, purchase_id):
+    purchase = _client_purchase_or_404(request.user, purchase_id)
+    return Response(PurchaseAccessDetailSerializer(purchase).data)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated, IsClient])
+def mark_video_watched(request, purchase_id):
+    purchase = _client_purchase_or_404(request.user, purchase_id)
+    serializer = MarkVideoWatchedSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+    part_number = serializer.validated_data['part_number']
+
+    get_object_or_404(
+        ChoreographyVideo,
+        choreography=purchase.choreography,
+        part_number=part_number,
+    )
+
+    total_videos = purchase.choreography.video_count
+    purchase.videos_watched = min(total_videos, max(purchase.videos_watched, part_number))
+    purchase.save(update_fields=['videos_watched'])
+
+    return Response(PurchaseAccessDetailSerializer(purchase).data)
 
 
 @api_view(['GET'])

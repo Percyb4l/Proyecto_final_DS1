@@ -51,6 +51,9 @@ export const salesApi = {
   checkout: (data: object) => api.post('/sales/checkout/', data),
   mySales: () => api.get('/sales/my/'),
   myPurchases: () => api.get('/sales/purchases/'),
+  getPurchase: (id: number) => api.get(`/sales/purchases/${id}/`),
+  markWatched: (id: number, partNumber: number) =>
+    api.post(`/sales/purchases/${id}/watch/`, { part_number: partNumber }),
   allSales: () => api.get('/sales/all/'),
 };
 
