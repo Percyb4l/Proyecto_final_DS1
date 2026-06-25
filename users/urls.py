@@ -11,6 +11,8 @@ urlpatterns = [
     path('register/', views.RegisterView.as_view(), name='register'),
     path('login/', views.LoginView.as_view(), name='login'),
     path('me/', views.MeView.as_view(), name='me'),
+    path('password-reset/', views.password_reset_request, name='password-reset'),
+    path('password-reset/confirm/', views.password_reset_confirm, name='password-reset-confirm'),
     path('dashboard/admin/', views.admin_dashboard, name='admin-dashboard'),
     path('dashboard/client/', views.client_dashboard, name='client-dashboard'),
     path('', include(router.urls)),

@@ -103,6 +103,27 @@ class InternalUserCreateSerializer(serializers.ModelSerializer):
         return user
 
 
+class InternalUserUpdateSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True, required=False, min_length=6)
+
+    class Meta:
+        model = User
+        fields = [
+            'email', 'password', 'first_name', 'last_name', 'role',
+            'document_type', 'document_number', 'gender', 'birth_date',
+            'phone', 'billing_address', 'city', 'department', 'country',
+        ]
+
+    def update(self, instance, validated_data):
+        password = validated_data.pop('password', None)
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        if password:
+            instance.set_password(password)
+        instance.save()
+        return instance
+
+
 class LoginSerializer(serializers.Serializer):
     email = serializers.EmailField()
     password = serializers.CharField()
@@ -125,4 +146,20 @@ class LoginSerializer(serializers.Serializer):
         if not user.is_active:
             raise serializers.ValidationError({'detail': 'Usuario inactivo'})
         data['user'] = user
+        return data
+
+
+class PasswordResetRequestSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+
+
+class PasswordResetConfirmSerializer(serializers.Serializer):
+    uid = serializers.CharField()
+    token = serializers.CharField()
+    password = serializers.CharField(min_length=6)
+    password_confirm = serializers.CharField(min_length=6)
+
+    def validate(self, data):
+        if data['password'] != data['password_confirm']:
+            raise serializers.ValidationError({'password_confirm': 'Las contraseñas no coinciden'})
         return data

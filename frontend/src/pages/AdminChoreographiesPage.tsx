@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { CheckCircle } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { CheckCircle, Plus, Pencil } from 'lucide-react';
 import AdminLayout from '../components/AdminLayout';
 import { choreoApi } from '../services/api';
 import type { Choreography } from '../types';
@@ -29,7 +30,10 @@ export default function AdminChoreographiesPage() {
 
   return (
     <AdminLayout>
-      <h1 className="font-display text-3xl tracking-wide mb-6">COREOGRAFÍAS</h1>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="font-display text-3xl tracking-wide">COREOGRAFÍAS</h1>
+        <Link to="/admin/choreographies/new" className="gradient-btn flex items-center gap-2 text-sm"><Plus className="w-4 h-4" /> Nueva</Link>
+      </div>
 
       <div className="flex gap-4 mb-6">
         <select className="input-field w-auto" value={genreFilter} onChange={(e) => setGenreFilter(e.target.value)}>
@@ -63,9 +67,10 @@ export default function AdminChoreographiesPage() {
                 <td className="p-4 text-[#FF6B1A]">{formatPrice(c.price)}</td>
                 <td className="p-4">{c.sales_count}</td>
                 <td className="p-4 capitalize">{c.status}</td>
-                <td className="p-4">
+                <td className="p-4 flex gap-3 items-center">
+                  <Link to={`/admin/choreographies/${c.id}/edit`} className="text-[#FF6B1A]"><Pencil className="w-4 h-4" /></Link>
                   {c.status === 'pending' && (
-                    <button onClick={() => handleApprove(c.id)} className="text-green-400 flex items-center gap-1 text-sm">
+                    <button type="button" onClick={() => handleApprove(c.id)} className="text-green-400 flex items-center gap-1 text-sm">
                       <CheckCircle className="w-4 h-4" /> Aprobar
                     </button>
                   )}

@@ -27,6 +27,8 @@ export const authApi = {
   register: (data: object) => api.post('/auth/register/', data),
   me: () => api.get('/auth/me/'),
   updateMe: (data: object) => api.patch('/auth/me/', data),
+  passwordResetRequest: (email: string) => api.post('/auth/password-reset/', { email }),
+  passwordResetConfirm: (data: object) => api.post('/auth/password-reset/confirm/', data),
 };
 
 export const choreoApi = {
@@ -51,6 +53,9 @@ export const salesApi = {
   checkout: (data: object) => api.post('/sales/checkout/', data),
   mySales: () => api.get('/sales/my/'),
   myPurchases: () => api.get('/sales/purchases/'),
+  getPurchase: (id: number) => api.get(`/sales/purchases/${id}/`),
+  markWatched: (id: number, partNumber: number) =>
+    api.post(`/sales/purchases/${id}/watch/`, { part_number: partNumber }),
   allSales: () => api.get('/sales/all/'),
 };
 

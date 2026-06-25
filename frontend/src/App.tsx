@@ -13,6 +13,11 @@ import AdminSalesPage from './pages/AdminSalesPage';
 import AdminProfessorsPage from './pages/AdminProfessorsPage';
 import AdminSettingsPage from './pages/AdminSettingsPage';
 import ProfessorDashboardPage from './pages/ProfessorDashboardPage';
+import PurchaseViewPage from './pages/PurchaseViewPage';
+import CheckoutPage from './pages/CheckoutPage';
+import ForgotPasswordPage from './pages/ForgotPasswordPage';
+import ProfilePage from './pages/ProfilePage';
+import ChoreographyFormPage from './pages/ChoreographyFormPage';
 import { getAccountPath } from './utils/auth';
 
 function PrivateRoute({ children, roles }: { children: React.ReactNode; roles?: string[] }) {
@@ -29,13 +34,20 @@ function AppRoutes() {
       <Route path="/" element={<LandingPage />} />
       <Route path="/catalog" element={<CatalogPage />} />
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+      <Route path="/reset-password" element={<ResetPasswordPage />} />
       <Route path="/register" element={<RegisterPage />} />
+      <Route path="/profile" element={<PrivateRoute><ProfilePage /></PrivateRoute>} />
       <Route path="/cart" element={<PrivateRoute roles={['client']}><CartPage /></PrivateRoute>} />
+      <Route path="/checkout" element={<PrivateRoute roles={['client']}><CheckoutPage /></PrivateRoute>} />
       <Route path="/dashboard" element={<PrivateRoute roles={['client']}><ClientDashboardPage /></PrivateRoute>} />
+      <Route path="/my-choreographies/:purchaseId" element={<PrivateRoute roles={['client']}><PurchaseViewPage /></PrivateRoute>} />
       <Route path="/professor" element={<PrivateRoute roles={['professor']}><ProfessorDashboardPage /></PrivateRoute>} />
       <Route path="/admin" element={<PrivateRoute roles={['admin', 'director']}><AdminDashboardPage /></PrivateRoute>} />
       <Route path="/admin/users" element={<PrivateRoute roles={['admin', 'director']}><AdminUsersPage /></PrivateRoute>} />
       <Route path="/admin/choreographies" element={<PrivateRoute roles={['admin', 'director', 'professor']}><AdminChoreographiesPage /></PrivateRoute>} />
+      <Route path="/admin/choreographies/new" element={<PrivateRoute roles={['admin', 'director', 'professor']}><ChoreographyFormPage /></PrivateRoute>} />
+      <Route path="/admin/choreographies/:id/edit" element={<PrivateRoute roles={['admin', 'director', 'professor']}><ChoreographyFormPage /></PrivateRoute>} />
       <Route path="/admin/sales" element={<PrivateRoute roles={['admin', 'director']}><AdminSalesPage /></PrivateRoute>} />
       <Route path="/admin/professors" element={<PrivateRoute roles={['admin', 'director']}><AdminProfessorsPage /></PrivateRoute>} />
       <Route path="/admin/settings" element={<PrivateRoute roles={['admin', 'director']}><AdminSettingsPage /></PrivateRoute>} />
