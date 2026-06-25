@@ -58,13 +58,6 @@ export default function LoginPage() {
           <h1 className="font-display text-3xl tracking-wide mb-2">BIENVENIDO</h1>
           <p className="text-gray-400 mb-6">Inicia sesión para continuar</p>
 
-          <div className="bg-[#111] border border-[#FF6B1A] rounded-xl p-4 mb-6">
-            <p className="text-xs text-[#FF6B1A] font-display mb-2">CREDENCIALES DE PRUEBA</p>
-            <p className="text-xs text-gray-400">Admin: admin@ritmoflow.com / admin123</p>
-            <p className="text-xs text-gray-400">Profesor: carlos.prof@ritmoflow.com / admin123</p>
-            <p className="text-xs text-gray-400">Cliente: ana@ritmoflow.com / admin123</p>
-          </div>
-
           <GoogleButton />
           <AuthDivider />
 
