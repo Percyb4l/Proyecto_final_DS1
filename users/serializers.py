@@ -17,6 +17,19 @@ class UserSerializer(serializers.ModelSerializer):
         read_only_fields = ['id']
 
 
+class MeProfileSerializer(serializers.ModelSerializer):
+    full_name = serializers.ReadOnlyField()
+
+    class Meta:
+        model = User
+        fields = [
+            'id', 'username', 'email', 'first_name', 'last_name', 'full_name',
+            'role', 'document_type', 'document_number', 'gender', 'birth_date',
+            'phone', 'billing_address', 'city', 'department', 'country',
+        ]
+        read_only_fields = ['id', 'username', 'role']
+
+
 class ProfessorProfileSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
 

@@ -9,6 +9,11 @@ class IsAdminOrDirector(BasePermission):
         return request.user.is_authenticated and request.user.role in (User.Role.ADMIN, User.Role.DIRECTOR)
 
 
+class IsClient(BasePermission):
+    def has_permission(self, request, view):
+        return request.user.is_authenticated and request.user.role == User.Role.CLIENT
+
+
 class IsAdminDirectorOrProfessor(BasePermission):
     def has_permission(self, request, view):
         return request.user.is_authenticated and request.user.role in (
