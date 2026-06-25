@@ -20,6 +20,7 @@ from .serializers import (
     UserSerializer, MeProfileSerializer, RegisterSerializer, LoginSerializer,
     InternalUserCreateSerializer, ProfessorProfileSerializer,
     PasswordResetRequestSerializer, PasswordResetConfirmSerializer,
+    InternalUserUpdateSerializer,
 )
 from .permissions import IsAdminOrDirector, IsAdminDirectorOrProfessor, IsClient
 
@@ -278,6 +279,8 @@ class InternalUserViewSet(viewsets.ModelViewSet):
     def get_serializer_class(self):
         if self.action == 'create':
             return InternalUserCreateSerializer
+        if self.action in ('update', 'partial_update'):
+            return InternalUserUpdateSerializer
         return UserSerializer
 
     def perform_create(self, serializer):

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2, Pencil } from 'lucide-react';
 import AdminLayout from '../components/AdminLayout';
 import { usersApi } from '../services/api';
 import type { User } from '../types';
@@ -9,6 +9,7 @@ export default function AdminUsersPage() {
   const [roleFilter, setRoleFilter] = useState('');
   const [search, setSearch] = useState('');
   const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState<number | null>(null);
   const [form, setForm] = useState({ email: '', password: '', first_name: '', last_name: '', role: 'professor', document_number: '', phone: '', expertise: '', bio: '' });
 
   const load = () => {
@@ -23,7 +24,40 @@ export default function AdminUsersPage() {
   const handleCreate = async () => {
     await usersApi.createInternal(form);
     setShowForm(false);
+    setEditingId(null);
     load();
+  };
+
+  const handleUpdate = async () => {
+    if (!editingId) return;
+    const { password, expertise, bio, ...data } = form;
+    const payload = password ? { ...data, password } : data;
+    await usersApi.updateInternal(editingId, payload);
+    setShowForm(false);
+    setEditingId(null);
+    load();
+  };
+
+  const startEdit = (user: User) => {
+    setEditingId(user.id);
+    setShowForm(true);
+    setForm({
+      email: user.email,
+      password: '',
+      first_name: user.first_name,
+      last_name: user.last_name,
+      role: user.role,
+      document_number: user.document_number || '',
+      phone: user.phone || '',
+      expertise: '',
+      bio: '',
+    });
+  };
+
+  const resetForm = () => {
+    setShowForm(false);
+    setEditingId(null);
+    setForm({ email: '', password: '', first_name: '', last_name: '', role: 'professor', document_number: '', phone: '', expertise: '', bio: '' });
   };
 
   const handleDelete = async (id: number) => {
@@ -36,7 +70,7 @@ export default function AdminUsersPage() {
     <AdminLayout>
       <div className="flex justify-between items-center mb-6">
         <h1 className="font-display text-3xl tracking-wide">USUARIOS INTERNOS</h1>
-        <button onClick={() => setShowForm(!showForm)} className="gradient-btn flex items-center gap-2 text-sm"><Plus className="w-4 h-4" /> Nuevo</button>
+        <button onClick={() => { resetForm(); setShowForm(true); }} className="gradient-btn flex items-center gap-2 text-sm"><Plus className="w-4 h-4" /> Nuevo</button>
       </div>
 
       <div className="flex gap-4 mb-6">
@@ -51,6 +85,7 @@ export default function AdminUsersPage() {
 
       {showForm && (
         <div className="card-light p-6 mb-6 grid md:grid-cols-2 gap-4">
+          <h2 className="md:col-span-2 font-display text-xl">{editingId ? 'Editar usuario' : 'Nuevo usuario'}</h2>
           <input className="input-field" placeholder="Email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
           <input className="input-field" placeholder="Contraseña" type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />
           <input className="input-field" placeholder="Nombre" value={form.first_name} onChange={(e) => setForm({ ...form, first_name: e.target.value })} />
@@ -67,7 +102,10 @@ export default function AdminUsersPage() {
               <input className="input-field" placeholder="Biografía" value={form.bio} onChange={(e) => setForm({ ...form, bio: e.target.value })} />
             </>
           )}
-          <button onClick={handleCreate} className="gradient-btn md:col-span-2">Crear usuario</button>
+          <button type="button" onClick={resetForm} className="py-3 rounded-xl border border-[#333] text-gray-400 md:col-span-1">Cancelar</button>
+          <button type="button" onClick={editingId ? handleUpdate : handleCreate} className="gradient-btn md:col-span-1">
+            {editingId ? 'Guardar cambios' : 'Crear usuario'}
+          </button>
         </div>
       )}
 
@@ -85,8 +123,9 @@ export default function AdminUsersPage() {
                 <td className="p-4 text-gray-400">{u.email}</td>
                 <td className="p-4 capitalize text-[#E91E8C]">{u.role}</td>
                 <td className="p-4">{u.document_number}</td>
-                <td className="p-4">
-                  <button onClick={() => handleDelete(u.id)} className="text-red-400"><Trash2 className="w-4 h-4" /></button>
+                <td className="p-4 flex gap-3">
+                  <button type="button" onClick={() => startEdit(u)} className="text-[#FF6B1A]"><Pencil className="w-4 h-4" /></button>
+                  <button type="button" onClick={() => handleDelete(u.id)} className="text-red-400"><Trash2 className="w-4 h-4" /></button>
                 </td>
               </tr>
             ))}
