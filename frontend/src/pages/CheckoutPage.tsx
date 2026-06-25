@@ -1,3 +1,7 @@
+/**
+ * Checkout en 4 pasos: ítems → datos personales → pago → confirmación.
+ * Llama a POST /sales/checkout/ y muestra enlaces a videos comprados.
+ */
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { CheckCircle, Lock, Video } from 'lucide-react';
@@ -53,6 +57,7 @@ export default function CheckoutPage() {
   const tax = subtotal * 0.19;
   const total = subtotal + tax;
 
+  /** Procesa el pago simulado y avanza al paso de confirmación. */
   const handleCheckout = async () => {
     setLoading(true);
     try {

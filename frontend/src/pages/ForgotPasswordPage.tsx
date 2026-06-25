@@ -1,3 +1,6 @@
+/**
+ * Solicitud de recuperación de contraseña por correo.
+ */
 import { useState } from 'react';
 import type { FormEvent } from 'react';
 import { Link } from 'react-router-dom';

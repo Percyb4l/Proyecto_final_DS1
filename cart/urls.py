@@ -1,3 +1,4 @@
+"""Rutas del carrito bajo /api/cart/."""
 from django.urls import path
 from . import views
 

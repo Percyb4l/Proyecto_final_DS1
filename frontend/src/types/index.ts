@@ -1,3 +1,4 @@
+/** Tipos TypeScript compartidos y utilidades de formato (precio, etiquetas). */
 export interface User {
   id: number;
   email: string;
@@ -65,6 +66,7 @@ export const DIFFICULTY_LABELS: Record<string, string> = {
   basic: 'Básico', intermediate: 'Intermedio', advanced: 'Avanzado',
 };
 
+/** Formatea precios en pesos colombianos (COP). */
 export const formatPrice = (price: number | string) =>
   new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(Number(price));
 

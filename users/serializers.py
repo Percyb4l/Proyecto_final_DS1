@@ -1,3 +1,9 @@
+"""
+Serializadores de usuarios: registro, login, perfil y usuarios internos.
+
+Validan CAPTCHA en login, impiden editar el rol en /me/ y crean perfiles
+de profesor al registrar usuarios internos.
+"""
 from rest_framework import serializers
 from django.contrib.auth import authenticate
 from captcha.models import CaptchaStore
@@ -18,6 +24,8 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class MeProfileSerializer(serializers.ModelSerializer):
+    """Perfil editable del usuario autenticado; el rol es de solo lectura."""
+
     full_name = serializers.ReadOnlyField()
 
     class Meta:
@@ -39,6 +47,8 @@ class ProfessorProfileSerializer(serializers.ModelSerializer):
 
 
 class RegisterSerializer(serializers.ModelSerializer):
+    """Registro público de clientes con validación de contraseñas y documento único."""
+
     password = serializers.CharField(write_only=True, min_length=6)
     password_confirm = serializers.CharField(write_only=True)
 
@@ -74,6 +84,8 @@ class RegisterSerializer(serializers.ModelSerializer):
 
 
 class InternalUserCreateSerializer(serializers.ModelSerializer):
+    """Creación de admin, director o profesor desde el panel de administración."""
+
     password = serializers.CharField(write_only=True, min_length=6)
     expertise = serializers.CharField(required=False, allow_blank=True)
     bio = serializers.CharField(required=False, allow_blank=True)
@@ -104,6 +116,8 @@ class InternalUserCreateSerializer(serializers.ModelSerializer):
 
 
 class InternalUserUpdateSerializer(serializers.ModelSerializer):
+    """Actualización de usuarios internos; contraseña opcional."""
+
     password = serializers.CharField(write_only=True, required=False, min_length=6)
 
     class Meta:
@@ -125,6 +139,8 @@ class InternalUserUpdateSerializer(serializers.ModelSerializer):
 
 
 class LoginSerializer(serializers.Serializer):
+    """Valida credenciales y CAPTCHA antes de emitir JWT."""
+
     email = serializers.EmailField()
     password = serializers.CharField()
     captcha_key = serializers.CharField()

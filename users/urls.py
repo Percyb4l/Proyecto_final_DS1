@@ -1,3 +1,6 @@
+"""
+Rutas de autenticación y gestión de usuarios bajo /api/auth/.
+"""
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from . import views

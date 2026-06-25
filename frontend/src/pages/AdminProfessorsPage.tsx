@@ -1,3 +1,6 @@
+/**
+ * Listado de profesores con perfil (expertise, bio) para administración.
+ */
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import AdminLayout from '../components/AdminLayout';

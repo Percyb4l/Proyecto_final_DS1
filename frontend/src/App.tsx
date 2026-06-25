@@ -1,3 +1,7 @@
+/**
+ * RITMOFLOW — Punto de entrada de rutas y protección por rol.
+ * Define PrivateRoute (JWT) y redirige según el rol del usuario autenticado.
+ */
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import LandingPage from './pages/LandingPage';
@@ -21,6 +25,7 @@ import ProfilePage from './pages/ProfilePage';
 import ChoreographyFormPage from './pages/ChoreographyFormPage';
 import { getAccountPath } from './utils/auth';
 
+/** Redirige a login si no hay sesión o si el rol no está permitido. */
 function PrivateRoute({ children, roles }: { children: React.ReactNode; roles?: string[] }) {
   const { user, loading } = useAuth();
   if (loading) return <div className="min-h-screen flex items-center justify-center bg-[#1A1A1A]"><p className="text-[#FF6B1A]">Cargando...</p></div>;

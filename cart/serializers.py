@@ -1,3 +1,4 @@
+"""Serializadores del carrito con coreografías anidadas."""
 from rest_framework import serializers
 from .models import Cart, CartItem
 from choreographies.serializers import ChoreographySerializer

@@ -1,3 +1,8 @@
+"""
+Comando de gestión: carga usuarios y coreografías de demostración.
+
+Uso: python manage.py seed_data
+"""
 from django.core.management.base import BaseCommand
 from django.contrib.auth import get_user_model
 from users.models import ProfessorProfile
@@ -40,9 +45,12 @@ CHOREOS = [
 
 
 class Command(BaseCommand):
+    """Crea admin, director, profesores, cliente y 6 coreografías publicadas."""
+
     help = 'Carga datos semilla para RITMOFLOW'
 
     def handle(self, *args, **options):
+        """Ejecuta la siembra de datos iniciales."""
         admin, _ = User.objects.get_or_create(
             email='admin@ritmoflow.com',
             defaults={

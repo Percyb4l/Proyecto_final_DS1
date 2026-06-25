@@ -1,3 +1,7 @@
+/**
+ * Carrito de compras del cliente.
+ * Lista ítems, calcula IVA 19% y redirige al checkout por pasos.
+ */
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Trash2, Video } from 'lucide-react';

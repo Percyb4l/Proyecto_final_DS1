@@ -1,3 +1,8 @@
+"""
+Configuración principal de Django para RITMOFLOW.
+
+Carga variables desde .env: PostgreSQL, JWT, CORS, email y FRONTEND_URL.
+"""
 import os
 from pathlib import Path
 from datetime import timedelta

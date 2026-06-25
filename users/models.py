@@ -1,8 +1,15 @@
+"""
+Modelos de usuarios de RITMOFLOW.
+
+Define el usuario personalizado con roles (admin, director, profesor, cliente)
+y el perfil extendido de profesores bailarines.
+"""
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
 
 class User(AbstractUser):
+    """Usuario del sistema. Extiende AbstractUser con rol y datos de facturación."""
     class Role(models.TextChoices):
         ADMIN = 'admin', 'Administrador'
         DIRECTOR = 'director', 'Director'
@@ -33,14 +40,17 @@ class User(AbstractUser):
 
     @property
     def is_internal(self):
+        """True si el usuario pertenece al equipo interno (no es cliente)."""
         return self.role in (self.Role.ADMIN, self.Role.DIRECTOR, self.Role.PROFESSOR)
 
     @property
     def full_name(self):
+        """Nombre completo para mostrar en UI y reportes."""
         return f'{self.first_name} {self.last_name}'.strip() or self.username
 
 
 class ProfessorProfile(models.Model):
+    """Datos profesionales del profesor bailarín vinculado a un User."""
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='professor_profile')
     expertise = models.CharField(max_length=200, help_text='Estilos de baile que enseña')
     bio = models.TextField(blank=True)

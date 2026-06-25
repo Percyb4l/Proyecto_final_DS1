@@ -1,3 +1,7 @@
+/**
+ * Registro de nuevos clientes.
+ * Crea cuenta vía API y redirige al dashboard del cliente.
+ */
 import { useState } from 'react';
 import type { FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';

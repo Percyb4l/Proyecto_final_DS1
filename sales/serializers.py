@@ -1,3 +1,6 @@
+"""
+Serializadores de ventas, checkout y acceso a compras.
+"""
 from decimal import Decimal
 from rest_framework import serializers
 from .models import Sale, SaleItem, PurchaseAccess
@@ -23,6 +26,8 @@ class SaleSerializer(serializers.ModelSerializer):
 
 
 class CheckoutSerializer(serializers.Serializer):
+    """Datos del checkout por pasos: facturación, pago y datos personales opcionales."""
+
     payment_method = serializers.ChoiceField(choices=Sale.PaymentMethod.choices)
     billing_name = serializers.CharField(max_length=200)
     billing_email = serializers.EmailField()

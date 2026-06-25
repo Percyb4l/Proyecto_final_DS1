@@ -1,8 +1,16 @@
+"""
+Modelos del catálogo: coreografías y videos por parte.
+
+Cada coreografía es un paquete vendible con estado de aprobación y contador
+de ventas calculado automáticamente (sales_count).
+"""
 from django.db import models
 from django.conf import settings
 
 
 class Choreography(models.Model):
+    """Paquete de videos de baile con precio, género, nivel y estado de publicación."""
+
     class Genre(models.TextChoices):
         SALSA = 'salsa', 'Salsa'
         BACHATA = 'bachata', 'Bachata'
@@ -58,14 +66,18 @@ class Choreography(models.Model):
 
     @property
     def video_count(self):
+        """Cantidad de partes/videos del paquete."""
         return self.videos.count()
 
     @property
     def professor_name(self):
+        """Nombre del profesor principal para mostrar en catálogo."""
         return self.main_professor.full_name
 
 
 class ChoreographyVideo(models.Model):
+    """Una parte del paquete (ej. Parte 1: pasos básicos)."""
+
     choreography = models.ForeignKey(Choreography, on_delete=models.CASCADE, related_name='videos')
     part_number = models.PositiveIntegerField()
     title = models.CharField(max_length=200)

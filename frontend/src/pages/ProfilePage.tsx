@@ -1,3 +1,7 @@
+/**
+ * Edición del perfil personal (todos los roles).
+ * Usa AdminLayout para usuarios internos o Navbar para clientes.
+ */
 import { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';

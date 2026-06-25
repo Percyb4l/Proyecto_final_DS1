@@ -1,3 +1,6 @@
+/**
+ * Formulario crear/editar coreografía con paquete de videos.
+ */
 import { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';

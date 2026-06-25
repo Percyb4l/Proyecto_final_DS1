@@ -1,3 +1,7 @@
+/**
+ * Catálogo público de coreografías.
+ * Filtros por género/nivel, búsqueda, ordenamiento y agregar al carrito.
+ */
 import { useEffect, useState } from 'react';
 import { Search, ShoppingCart, Video, ChevronDown } from 'lucide-react';
 import Navbar from '../components/Navbar';

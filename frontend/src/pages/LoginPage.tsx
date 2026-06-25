@@ -1,3 +1,7 @@
+/**
+ * Inicio de sesión con CAPTCHA.
+ * Tras login exitoso redirige al dashboard según rol del usuario.
+ */
 import { useState, useEffect } from 'react';
 import type { FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
@@ -17,6 +21,7 @@ export default function LoginPage() {
   const { login } = useAuth();
   const navigate = useNavigate();
 
+  /** Solicita nueva imagen CAPTCHA al backend. */
   const loadCaptcha = () => {
     authApi.getCaptcha().then((r) => {
       setCaptchaKey(r.data.captcha_key);

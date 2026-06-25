@@ -1,3 +1,7 @@
+/**
+ * Cliente HTTP Axios para el API Django.
+ * Añade JWT automáticamente y redirige a login en respuestas 401.
+ */
 import axios from 'axios';
 
 const api = axios.create({ baseURL: '/api', headers: { 'Content-Type': 'application/json' } });
@@ -21,6 +25,7 @@ api.interceptors.response.use(
 
 export default api;
 
+/** Autenticación: login, registro, perfil y recuperación de contraseña. */
 export const authApi = {
   getCaptcha: () => api.get('/auth/captcha/'),
   login: (data: object) => api.post('/auth/login/', data),
@@ -31,6 +36,7 @@ export const authApi = {
   passwordResetConfirm: (data: object) => api.post('/auth/password-reset/confirm/', data),
 };
 
+/** Catálogo de coreografías: listado, CRUD y aprobación. */
 export const choreoApi = {
   getAll: (params?: object) => api.get('/choreographies/', { params }),
   getFeatured: () => api.get('/choreographies/featured/'),
@@ -42,6 +48,7 @@ export const choreoApi = {
   approve: (id: number) => api.post(`/choreographies/${id}/approve/`),
 };
 
+/** Carrito persistente del cliente. */
 export const cartApi = {
   get: () => api.get('/cart/'),
   add: (choreographyId: number) => api.post('/cart/add/', { choreography_id: choreographyId }),
@@ -49,6 +56,7 @@ export const cartApi = {
   clear: () => api.delete('/cart/clear/'),
 };
 
+/** Ventas, checkout, compras y progreso de videos. */
 export const salesApi = {
   checkout: (data: object) => api.post('/sales/checkout/', data),
   mySales: () => api.get('/sales/my/'),
@@ -59,11 +67,13 @@ export const salesApi = {
   allSales: () => api.get('/sales/all/'),
 };
 
+/** Métricas de dashboards admin y cliente. */
 export const dashboardApi = {
   admin: () => api.get('/auth/dashboard/admin/'),
   client: () => api.get('/auth/dashboard/client/'),
 };
 
+/** Gestión de usuarios internos y listado de profesores. */
 export const usersApi = {
   getInternal: (params?: object) => api.get('/auth/internal/', { params }),
   createInternal: (data: object) => api.post('/auth/internal/', data),

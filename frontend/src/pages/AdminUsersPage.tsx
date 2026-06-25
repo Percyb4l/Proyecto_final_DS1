@@ -1,3 +1,6 @@
+/**
+ * Gestión CRUD de usuarios internos (admin, director, profesor).
+ */
 import { useEffect, useState } from 'react';
 import { Plus, Trash2, Pencil } from 'lucide-react';
 import AdminLayout from '../components/AdminLayout';

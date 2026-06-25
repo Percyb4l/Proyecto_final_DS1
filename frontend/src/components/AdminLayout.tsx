@@ -1,3 +1,6 @@
+/**
+ * Layout lateral del panel de administración (sidebar + contenido).
+ */
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { LayoutDashboard, Users, Music, ShoppingBag, GraduationCap, Settings, LogOut } from 'lucide-react';
