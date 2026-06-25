@@ -31,6 +31,7 @@ export interface Choreography {
   thumbnail_emoji: string;
   rating: number | string;
   professor_name: string;
+  guest_professor_external?: string;
   video_count: number;
   videos?: ChoreographyVideo[];
 }

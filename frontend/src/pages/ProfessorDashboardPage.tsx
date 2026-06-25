@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Users, Video, DollarSign, Star, Eye } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import Navbar from '../components/Navbar';
@@ -78,7 +79,7 @@ export default function ProfessorDashboardPage() {
 
         <div className="flex justify-between items-center mb-6">
           <h2 className="font-display text-3xl tracking-wide">MIS COREOGRAFÍAS</h2>
-          <button className="gradient-btn text-sm">+ Agregar nueva</button>
+          <Link to="/admin/choreographies/new" className="gradient-btn text-sm">+ Agregar nueva</Link>
         </div>
 
         <div className="space-y-4">
@@ -118,10 +119,9 @@ export default function ProfessorDashboardPage() {
                   </div>
                 </div>
                 <div className="flex flex-col gap-3">
-                  <button className="gradient-btn text-sm py-2 px-6">Ver detalles</button>
-                  <button className="border-2 border-[#333] text-gray-300 text-sm py-2 px-6 rounded-full hover:border-[#FF6B1A] hover:text-[#FF6B1A] transition-colors">
+                  <Link to={`/admin/choreographies/${c.id}/edit`} className="border-2 border-[#333] text-gray-300 text-sm py-2 px-6 rounded-full hover:border-[#FF6B1A] hover:text-[#FF6B1A] transition-colors text-center">
                     Editar
-                  </button>
+                  </Link>
                 </div>
               </div>
             </div>
