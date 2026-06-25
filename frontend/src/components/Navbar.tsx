@@ -1,3 +1,7 @@
+/**
+ * Barra de navegación principal.
+ * Muestra enlaces según si el usuario está autenticado y su rol.
+ */
 import { Link } from 'react-router-dom';
 import { ShoppingCart } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';

@@ -1,3 +1,6 @@
+/**
+ * Reporte de ventas para Admin/Director con gráfica y detalle de ítems.
+ */
 import { useEffect, useState } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import AdminLayout from '../components/AdminLayout';

@@ -1,3 +1,9 @@
+/**
+ * Botones de login social decorativos (sin OAuth implementado).
+ * Se muestran en Login y Registro como parte del diseño Figma.
+ */
+
+/** Botón Google — solo UI, no conecta con proveedor OAuth. */
 export function GoogleButton() {
   return (
     <button type="button" className="w-full bg-white text-gray-800 rounded-xl py-3 flex items-center justify-center gap-3 hover:bg-gray-100 transition-colors">
@@ -12,6 +18,7 @@ export function GoogleButton() {
   );
 }
 
+/** Botón Facebook — solo UI, no conecta con proveedor OAuth. */
 export function FacebookButton() {
   return (
     <button type="button" className="w-full bg-[#1877F2] text-white rounded-xl py-3 flex items-center justify-center gap-3 hover:bg-[#166FE5] transition-colors">
@@ -23,6 +30,7 @@ export function FacebookButton() {
   );
 }
 
+/** Separador visual entre login social y formulario por correo. */
 export function AuthDivider() {
   return (
     <div className="flex items-center gap-4 my-6">

@@ -1,3 +1,6 @@
+/**
+ * Dashboard del profesor: métricas de sus coreografías y acceso al CRUD.
+ */
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Users, Video, DollarSign, Star, Eye } from 'lucide-react';

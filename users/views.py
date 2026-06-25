@@ -1,3 +1,9 @@
+"""
+Vistas de autenticación, dashboards y usuarios internos.
+
+Incluye: login/registro JWT, recuperación de contraseña por correo,
+métricas del panel admin y dashboard del cliente con gráficas.
+"""
 from rest_framework import viewsets, status, generics
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.response import Response
@@ -34,6 +40,7 @@ GENRE_LABELS = {
 
 
 def _last_six_month_periods():
+    """Genera los últimos 6 meses (año, mes) para series temporales del dashboard."""
     now = timezone.now()
     year, month = now.year, now.month
     periods = []
@@ -62,6 +69,7 @@ def _series_from_periods(periods, values_by_period, value_key='value'):
 
 
 def build_admin_dashboard_stats():
+    """Agrega totalizadores y estadísticas reales para AdminDashboardPage."""
     from choreographies.models import Choreography
     from sales.models import Sale, SaleItem
 
@@ -162,11 +170,14 @@ def build_admin_dashboard_stats():
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def get_captcha(request):
+    """Genera imagen CAPTCHA para login y formularios públicos."""
     key = CaptchaStore.generate_key()
     return Response({'captcha_key': key, 'captcha_image': captcha_image_url(key)})
 
 
 class RegisterView(generics.CreateAPIView):
+    """POST /auth/register/ — Crea cliente y devuelve tokens JWT."""
+
     permission_classes = [AllowAny]
     serializer_class = RegisterSerializer
 
@@ -183,6 +194,8 @@ class RegisterView(generics.CreateAPIView):
 
 
 class LoginView(generics.GenericAPIView):
+    """POST /auth/login/ — Autentica con email, contraseña y CAPTCHA."""
+
     permission_classes = [AllowAny]
     serializer_class = LoginSerializer
 
@@ -199,6 +212,8 @@ class LoginView(generics.GenericAPIView):
 
 
 class MeView(generics.RetrieveUpdateAPIView):
+    """GET/PATCH /auth/me/ — Perfil del usuario autenticado."""
+
     permission_classes = [IsAuthenticated]
     serializer_class = MeProfileSerializer
 
@@ -209,6 +224,7 @@ class MeView(generics.RetrieveUpdateAPIView):
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def password_reset_request(request):
+    """Envía correo con enlace de restablecimiento (uid + token Django)."""
     serializer = PasswordResetRequestSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
     email = serializer.validated_data['email']
@@ -241,6 +257,7 @@ def password_reset_request(request):
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def password_reset_confirm(request):
+    """Valida token y actualiza la contraseña del usuario."""
     serializer = PasswordResetConfirmSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
     data = serializer.validated_data
@@ -260,6 +277,8 @@ def password_reset_confirm(request):
 
 
 class InternalUserViewSet(viewsets.ModelViewSet):
+    """CRUD de usuarios internos (admin, director, profesor). Solo Admin/Director."""
+
     serializer_class = UserSerializer
     permission_classes = [IsAuthenticated, IsAdminOrDirector]
 
@@ -294,6 +313,8 @@ class InternalUserViewSet(viewsets.ModelViewSet):
 
 
 class ProfessorViewSet(viewsets.ReadOnlyModelViewSet):
+    """Listado público de profesores con perfil para filtros del catálogo."""
+
     queryset = ProfessorProfile.objects.select_related('user')
     serializer_class = ProfessorProfileSerializer
     permission_classes = [AllowAny]
@@ -302,12 +323,14 @@ class ProfessorViewSet(viewsets.ReadOnlyModelViewSet):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated, IsAdminOrDirector])
 def admin_dashboard(request):
+    """Métricas y gráficas para el panel de administración."""
     return Response(build_admin_dashboard_stats())
 
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated, IsClient])
 def client_dashboard(request):
+    """Dashboard del cliente: compras, progreso, recomendaciones y gráficas."""
     from collections import Counter
     from django.db.models.functions import TruncMonth
     from sales.models import PurchaseAccess, Sale

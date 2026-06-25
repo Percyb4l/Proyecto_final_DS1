@@ -1,3 +1,9 @@
+"""
+ViewSet de coreografías: CRUD, filtros, aprobación y endpoints públicos.
+
+- Clientes ven solo publicadas; profesores solo las suyas.
+- Admin/Director aprueban con POST /approve/.
+"""
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -15,9 +21,12 @@ from users.permissions import (
 
 
 class ChoreographyViewSet(viewsets.ModelViewSet):
+    """API REST del catálogo con permisos dinámicos según acción y rol."""
+
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
+        """Filtra coreografías visibles según rol y aplica filtros de catálogo."""
         qs = Choreography.objects.select_related('main_professor').prefetch_related('videos')
         user = self.request.user
 
@@ -85,6 +94,7 @@ class ChoreographyViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post'])
     def approve(self, request, pk=None):
+        """Publica una coreografía pendiente (solo Admin/Director)."""
         choreography = get_object_or_404(self.get_queryset_for_admin(), pk=pk)
         choreography.status = Choreography.Status.PUBLISHED
         choreography.save()
@@ -92,10 +102,12 @@ class ChoreographyViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'], permission_classes=[AllowAny])
     def featured(self, request):
+        """Top 4 coreografías publicadas para la landing page."""
         qs = self.get_queryset().filter(status=Choreography.Status.PUBLISHED)[:4]
         return Response(ChoreographySerializer(qs, many=True).data)
 
     @action(detail=False, methods=['get'], permission_classes=[AllowAny])
     def hot_sales(self, request):
+        """Top 6 por ventas para sección de más vendidas."""
         qs = self.get_queryset().filter(status=Choreography.Status.PUBLISHED).order_by('-sales_count')[:6]
         return Response(ChoreographySerializer(qs, many=True).data)

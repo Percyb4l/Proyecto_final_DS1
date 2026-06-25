@@ -1,3 +1,4 @@
+"""Rutas de ventas, checkout y acceso a compras bajo /api/sales/."""
 from django.urls import path
 from . import views
 

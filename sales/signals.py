@@ -1,3 +1,8 @@
+"""
+Signals que mantienen sales_count sincronizado con ventas completadas.
+
+Se ejecutan al crear/eliminar SaleItem o cambiar el estado de una Sale.
+"""
 from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 

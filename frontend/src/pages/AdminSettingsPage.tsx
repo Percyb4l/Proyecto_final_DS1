@@ -1,3 +1,6 @@
+/**
+ * Configuración visual del panel admin (UI de demostración, sin persistencia en API).
+ */
 import { useState } from 'react';
 import AdminLayout from '../components/AdminLayout';
 

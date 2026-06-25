@@ -1,3 +1,6 @@
+/**
+ * Panel admin: métricas reales, gráficas de ventas y distribución por género.
+ */
 import { useEffect, useState } from 'react';
 import {
   BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,

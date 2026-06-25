@@ -1,3 +1,8 @@
+"""
+Vistas del carrito: consultar, agregar, eliminar y vaciar.
+
+Solo accesible para clientes autenticados (IsClient).
+"""
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
@@ -11,6 +16,7 @@ from choreographies.models import Choreography
 
 
 def get_or_create_cart(user):
+    """Obtiene o crea el carrito del cliente."""
     cart, _ = Cart.objects.get_or_create(client=user)
     return cart
 
@@ -18,6 +24,7 @@ def get_or_create_cart(user):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated, IsClient])
 def get_cart(request):
+    """GET /cart/ — Lista ítems y totales del carrito."""
     cart = get_or_create_cart(request.user)
     return Response(CartSerializer(cart).data)
 
@@ -25,6 +32,7 @@ def get_cart(request):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated, IsClient])
 def add_to_cart(request):
+    """POST /cart/add/ — Agrega coreografía publicada al carrito."""
     choreography_id = request.data.get('choreography_id')
     choreography = get_object_or_404(Choreography, id=choreography_id, status='published')
     cart = get_or_create_cart(request.user)

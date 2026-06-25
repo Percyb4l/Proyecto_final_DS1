@@ -1,3 +1,8 @@
+"""
+Vistas de ventas: checkout, compras del cliente y reporte admin.
+
+El checkout calcula IVA 19%, crea Sale + PurchaseAccess y vacía el carrito.
+"""
 from decimal import Decimal
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
@@ -19,6 +24,12 @@ from cart.models import Cart
 @api_view(['POST'])
 @permission_classes([IsAuthenticated, IsClient])
 def checkout(request):
+    """
+    POST /sales/checkout/ — Procesa pago simulado desde el carrito.
+
+    Crea venta completada, accesos a videos, actualiza perfil del cliente
+    y devuelve resumen con enlaces a PurchaseViewPage.
+    """
     serializer = CheckoutSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
     data = serializer.validated_data
@@ -99,6 +110,7 @@ def checkout(request):
 
 
 def _client_purchase_or_404(user, purchase_id):
+    """Garantiza que la compra pertenece al cliente autenticado."""
     return get_object_or_404(
         PurchaseAccess.objects.select_related('choreography').prefetch_related('choreography__videos'),
         id=purchase_id,
@@ -109,6 +121,7 @@ def _client_purchase_or_404(user, purchase_id):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated, IsClient])
 def purchase_detail(request, purchase_id):
+    """GET /sales/purchases/<id>/ — Detalle con videos para el reproductor."""
     purchase = _client_purchase_or_404(request.user, purchase_id)
     return Response(PurchaseAccessDetailSerializer(purchase).data)
 
@@ -116,6 +129,7 @@ def purchase_detail(request, purchase_id):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated, IsClient])
 def mark_video_watched(request, purchase_id):
+    """POST /sales/purchases/<id>/watch/ — Registra progreso al ver una parte."""
     purchase = _client_purchase_or_404(request.user, purchase_id)
     serializer = MarkVideoWatchedSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
@@ -151,6 +165,7 @@ def my_purchases(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated, IsAdminOrDirector])
 def all_sales(request):
+    """GET /sales/all/ — Historial de ventas para Admin/Director."""
     sales = Sale.objects.all().prefetch_related('items').select_related('client')[:50]
     data = SaleSerializer(sales, many=True).data
     for i, sale in enumerate(sales):

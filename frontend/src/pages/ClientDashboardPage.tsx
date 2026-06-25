@@ -1,3 +1,6 @@
+/**
+ * Dashboard del cliente con métricas, gráficas Recharts y mis compras.
+ */
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Video, TrendingUp, Clock, Flame, Award } from 'lucide-react';

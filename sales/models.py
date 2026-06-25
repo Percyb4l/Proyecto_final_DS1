@@ -1,9 +1,16 @@
+"""
+Modelos de ventas y acceso a contenido comprado.
+
+Sale registra la transacción; PurchaseAccess permite ver videos y progreso.
+"""
 from django.db import models
 from django.conf import settings
 from choreographies.models import Choreography
 
 
 class Sale(models.Model):
+    """Venta completada con datos de facturación y método de pago simulado."""
+
     class PaymentMethod(models.TextChoices):
         CARD = 'card', 'Tarjeta'
         PSE = 'pse', 'PSE'
@@ -28,6 +35,8 @@ class Sale(models.Model):
 
 
 class SaleItem(models.Model):
+    """Snapshot del ítem vendido (título y precio al momento de la compra)."""
+
     sale = models.ForeignKey(Sale, on_delete=models.CASCADE, related_name='items')
     choreography = models.ForeignKey(Choreography, on_delete=models.PROTECT)
     price = models.DecimalField(max_digits=10, decimal_places=2)
@@ -38,6 +47,8 @@ class SaleItem(models.Model):
 
 
 class PurchaseAccess(models.Model):
+    """Acceso del cliente a una coreografía comprada y seguimiento de progreso."""
+
     client = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='purchases')
     choreography = models.ForeignKey(Choreography, on_delete=models.PROTECT)
     sale = models.ForeignKey(Sale, on_delete=models.CASCADE, related_name='accesses')
@@ -49,6 +60,7 @@ class PurchaseAccess(models.Model):
 
     @property
     def progress_percent(self):
+        """Porcentaje de videos vistos respecto al total del paquete."""
         total = self.choreography.video_count
         if total == 0:
             return 0

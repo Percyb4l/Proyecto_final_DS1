@@ -1,3 +1,6 @@
+"""
+Serializadores del catálogo de coreografías y sus videos embebidos.
+"""
 from rest_framework import serializers
 from .models import Choreography, ChoreographyVideo
 
@@ -25,6 +28,8 @@ class ChoreographySerializer(serializers.ModelSerializer):
 
 
 class ChoreographyCreateSerializer(serializers.ModelSerializer):
+    """Crea/edita coreografía con array de videos; queda en estado pending."""
+
     videos = ChoreographyVideoSerializer(many=True, required=False)
 
     class Meta:

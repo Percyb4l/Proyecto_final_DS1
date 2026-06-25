@@ -1,3 +1,7 @@
+/**
+ * Contexto global de autenticación.
+ * Restaura sesión desde localStorage y expone login/logout y flags de rol.
+ */
 import { createContext, useContext, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import type { User } from '../types';

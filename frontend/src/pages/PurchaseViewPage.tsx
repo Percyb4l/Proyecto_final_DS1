@@ -1,3 +1,7 @@
+/**
+ * Reproductor de videos de una coreografía comprada.
+ * Registra progreso al seleccionar cada parte del paquete.
+ */
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, CheckCircle, Play } from 'lucide-react';
@@ -6,6 +10,7 @@ import { salesApi } from '../services/api';
 import type { PurchaseAccess } from '../types';
 import { GENRE_LABELS, DIFFICULTY_LABELS } from '../types';
 
+/** Renderiza iframe YouTube, video directo o placeholder de demostración. */
 function VideoPlayer({ url, title }: { url: string; title: string }) {
   const isYoutube = url.includes('youtube.com') || url.includes('youtu.be');
   const isDirect = /\.(mp4|webm|ogg)(\?|$)/i.test(url);

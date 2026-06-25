@@ -1,5 +1,7 @@
-import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+/**
+ * Listado y aprobación de coreografías en el panel admin/profesor.
+ */
+import { useEffect, useState } from 'react';import { Link } from 'react-router-dom';
 import { CheckCircle, Plus, Pencil } from 'lucide-react';
 import AdminLayout from '../components/AdminLayout';
 import { choreoApi } from '../services/api';
@@ -23,6 +25,7 @@ export default function AdminChoreographiesPage() {
 
   useEffect(() => { load(); }, [genreFilter, statusFilter]);
 
+  /** Publica una coreografía pendiente (solo admin/director). */
   const handleApprove = async (id: number) => {
     await choreoApi.approve(id);
     load();

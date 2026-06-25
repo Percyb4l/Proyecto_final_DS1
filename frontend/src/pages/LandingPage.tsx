@@ -1,3 +1,7 @@
+/**
+ * Página de inicio (landing).
+ * Muestra hero, estadísticas de marca y coreografías destacadas del API.
+ */
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Star } from 'lucide-react';
