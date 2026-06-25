@@ -66,3 +66,23 @@ export const DIFFICULTY_LABELS: Record<string, string> = {
 
 export const formatPrice = (price: number | string) =>
   new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(Number(price));
+
+export interface AdminDashboardTotalizers {
+  active_users: number;
+  published_choreographies: number;
+  total_revenue: number;
+  total_sales_count: number;
+  average_ticket: number;
+}
+
+export interface AdminDashboardStats {
+  totalizers: AdminDashboardTotalizers;
+  statistics: {
+    monthly_sales: { month: string; year: number; amount: number }[];
+    monthly_registrations: { month: string; year: number; count: number }[];
+    top_choreographies: { title: string; genre: string; sales_count: number; revenue: number }[];
+    revenue_by_genre: { genre: string; revenue: number; count: number }[];
+    average_ticket: number;
+    clients_by_country: { country: string; count: number }[];
+  };
+}
