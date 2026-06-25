@@ -16,6 +16,7 @@ import ProfessorDashboardPage from './pages/ProfessorDashboardPage';
 import PurchaseViewPage from './pages/PurchaseViewPage';
 import CheckoutPage from './pages/CheckoutPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
+import ResetPasswordPage from './pages/ResetPasswordPage';
 import ProfilePage from './pages/ProfilePage';
 import ChoreographyFormPage from './pages/ChoreographyFormPage';
 import { getAccountPath } from './utils/auth';

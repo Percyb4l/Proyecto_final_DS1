@@ -1,64 +1,63 @@
-# RITMOFLOW - Academia de Baile en Línea
+# RITMOFLOW — Academia de Baile en Línea
 
-Proyecto final de **Desarrollo de Software I** (750009C) - Universidad del Valle, 2026A.
+Proyecto final de **Desarrollo de Software I** (750009C) — Universidad del Valle, 2026A.
 
-Plataforma web para una academia en línea de baile que gestiona usuarios internos, clientes, catálogo de coreografías en video, carrito de compras y proceso de ventas.
+Plataforma web para una academia en línea de baile que gestiona usuarios internos, clientes, catálogo de coreografías en video, carrito de compras, ventas y acceso al contenido comprado.
+
+## Características principales
+
+- **4 roles de usuario:** Administrador, Director, Profesor bailarín y Cliente
+- **Autenticación JWT** con CAPTCHA en login y recuperación de contraseña por correo
+- **Catálogo de coreografías** con paquetes de videos, filtros y aprobación por Director/Admin
+- **Carrito persistente** y checkout por pasos (ítems → datos → pago → confirmación)
+- **Acceso a videos comprados** con reproductor y seguimiento de progreso
+- **Dashboards** con métricas y gráficas (Recharts) para Admin, Cliente y Profesor
+- **Seguridad por rol** y ownership de recursos (carrito, compras, coreografías)
 
 ## Stack tecnológico
 
 | Capa | Tecnología |
 |------|-----------|
-| Frontend | React 19 + TypeScript + Vite + Tailwind CSS + Recharts |
-| Backend | Django 6 + Django REST Framework + JWT |
-| Base de datos | PostgreSQL 16 |
-| CAPTCHA | django-simple-captcha |
+| Frontend | React 19, TypeScript, Vite, Tailwind CSS, Recharts |
+| Backend | Django 6, Django REST Framework, Simple JWT |
+| Base de datos | PostgreSQL 14+ |
+| Otros | django-simple-captcha, psycopg3, python-dotenv |
 
-## Módulos implementados
-
-- **Gestión de usuarios internos** (Admin/Director): CRUD con filtros por rol y búsqueda
-- **Gestión de clientes**: Auto-registro, perfil, historial de compras
-- **Catálogo de coreografías**: CRUD, filtros por género/nivel/profesor, aprobación por Director
-- **Carrito de compras**: Persistente en base de datos
-- **Proceso de ventas**: Checkout con pago simulado (Tarjeta/PSE)
-- **Dashboards**: Admin (gráficos de ventas, top coreografías) y Cliente (progreso, recomendaciones)
-- **Autenticación**: Login con CAPTCHA, registro de clientes
-
-## Diseño (Figma)
-
-- Marca: **RITMOFLOW**
-- Colores: Naranja `#FF6B1A`, Fucsia `#E91E8C`, Crema `#FFF8F0`
-- Tema oscuro ganador del proceso de licitación de bocetos
-- 7 pantallas: Landing, Catálogo, Login, Registro, Dashboard Admin, Dashboard Cliente, Carrito
-
-## Instalación
+## Inicio rápido
 
 ### Requisitos
+
 - Python 3.11+
 - Node.js 18+
 - PostgreSQL 14+
 
-### Base de datos (Windows)
+### 1. Base de datos
+
 ```powershell
 psql -U postgres -c "CREATE DATABASE ritmoflow;"
 ```
 
-Te pedirá la contraseña del usuario `postgres` que definiste al instalar PostgreSQL.
+### 2. Variables de entorno
 
-### Variables de entorno
-
-Crea un archivo `.env` en la raíz del proyecto con:
+Crea un archivo `.env` en la raíz del proyecto:
 
 ```env
 DJANGO_SECRET_KEY=tu-clave-secreta
 DEBUG=True
+
 DB_NAME=ritmoflow
 DB_USER=postgres
 DB_PASSWORD=tu_contraseña_de_postgresql
 DB_HOST=localhost
 DB_PORT=5432
+
+FRONTEND_URL=http://localhost:5173
+EMAIL_BACKEND=django.core.mail.backends.console.EmailBackend
+DEFAULT_FROM_EMAIL=noreply@ritmoflow.com
 ```
 
-### Backend (Django)
+### 3. Backend
+
 ```powershell
 pip install -r requirements.txt
 python manage.py migrate
@@ -66,7 +65,8 @@ python manage.py seed_data
 python manage.py runserver
 ```
 
-### Frontend (React)
+### 4. Frontend
+
 ```powershell
 cd frontend
 npm install
@@ -84,17 +84,64 @@ Abrir **http://localhost:5173**
 | Profesor | carlos.prof@ritmoflow.com | admin123 |
 | Cliente | ana@ritmoflow.com | admin123 |
 
-## Estructura
+## Estructura del repositorio
 
 ```
-├── ritmoflow/          # Configuración Django
-├── users/              # Autenticación, usuarios internos, dashboards
-├── choreographies/     # Catálogo de coreografías y videos
-├── cart/               # Carrito de compras
-├── sales/              # Ventas y acceso a contenido
-├── frontend/           # React (RITMOFLOW UI)
-└── requirements.txt
+Proyecto_final_DS1/
+├── ritmoflow/           # Configuración Django (settings, urls)
+├── users/               # Autenticación, perfiles, usuarios internos, dashboards
+├── choreographies/      # Catálogo de coreografías y videos
+├── cart/                # Carrito de compras persistente
+├── sales/               # Ventas, checkout y acceso a contenido
+├── frontend/            # Aplicación React (RITMOFLOW UI)
+├── database/            # Notas de esquema SQL
+├── docs/                # Documentación técnica del proyecto
+├── requirements.txt
+└── manage.py
 ```
+
+## Rutas del frontend
+
+| Ruta | Descripción | Rol |
+|------|-------------|-----|
+| `/` | Landing page | Público |
+| `/catalog` | Catálogo de coreografías | Público |
+| `/login` | Inicio de sesión con CAPTCHA | Público |
+| `/register` | Registro de cliente | Público |
+| `/forgot-password` | Solicitar recuperación de clave | Público |
+| `/reset-password` | Restablecer contraseña | Público |
+| `/profile` | Editar perfil personal | Autenticado |
+| `/cart` | Carrito de compras | Cliente |
+| `/checkout` | Checkout por pasos | Cliente |
+| `/dashboard` | Dashboard del cliente | Cliente |
+| `/my-choreographies/:id` | Reproductor de videos comprados | Cliente |
+| `/professor` | Dashboard del profesor | Profesor |
+| `/admin` | Panel de administración | Admin / Director |
+| `/admin/users` | Gestión de usuarios internos | Admin / Director |
+| `/admin/choreographies` | Listado y aprobación de coreografías | Admin / Director / Profesor |
+| `/admin/choreographies/new` | Crear coreografía | Admin / Director / Profesor |
+| `/admin/choreographies/:id/edit` | Editar coreografía | Admin / Director / Profesor |
+| `/admin/sales` | Reporte de ventas | Admin / Director |
+| `/admin/professors` | Listado de profesores | Admin / Director |
+
+## Documentación
+
+La documentación técnica completa está en la carpeta [`docs/`](docs/README.md):
+
+- [Índice de documentación](docs/README.md)
+- [Arquitectura del sistema](docs/arquitectura.md)
+- [Modelos de datos](docs/modelos.md)
+- [API REST](docs/api.md)
+- [Roles y permisos](docs/roles-y-permisos.md)
+- [Frontend](docs/frontend.md)
+- [Flujos de negocio](docs/flujos.md)
+- [Guía de instalación detallada](docs/instalacion.md)
+
+## Diseño
+
+- Marca: **RITMOFLOW**
+- Colores: Naranja `#FF6B1A`, Fucsia `#E91E8C`, Crema `#FFF8F0`
+- Tema oscuro
 
 ## Equipo
 
