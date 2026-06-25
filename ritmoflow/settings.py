@@ -23,7 +23,7 @@ INSTALLED_APPS = [
     'users',
     'choreographies',
     'cart',
-    'sales',
+    'sales.apps.SalesConfig',
 ]
 
 MIDDLEWARE = [

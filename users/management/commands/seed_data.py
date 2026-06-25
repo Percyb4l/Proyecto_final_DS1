@@ -103,7 +103,6 @@ class Command(BaseCommand):
                     'song_name': c['song_name'], 'genre': c['genre'], 'difficulty': c['difficulty'],
                     'price': c['price'], 'thumbnail_emoji': c['emoji'], 'rating': c['rating'],
                     'main_professor': prof, 'status': Choreography.Status.PUBLISHED,
-                    'sales_count': (6 - i) * 3,
                     'description': f'Aprende {c["title"]} paso a paso con videos profesionales.',
                 },
             )
@@ -113,6 +112,9 @@ class Command(BaseCommand):
                         choreography=choreo, part_number=j + 1, title=vtitle,
                         video_url=f'https://example.com/video/{choreo.id}/{j+1}',
                     )
+
+        from sales.signals import sync_all_choreography_sales_counts
+        sync_all_choreography_sales_counts()
 
         self.stdout.write(self.style.SUCCESS('✅ Datos semilla cargados'))
         self.stdout.write('   admin@ritmoflow.com / admin123 (Admin)')
