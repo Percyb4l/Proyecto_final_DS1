@@ -15,6 +15,8 @@ import AdminSettingsPage from './pages/AdminSettingsPage';
 import ProfessorDashboardPage from './pages/ProfessorDashboardPage';
 import PurchaseViewPage from './pages/PurchaseViewPage';
 import CheckoutPage from './pages/CheckoutPage';
+import ForgotPasswordPage from './pages/ForgotPasswordPage';
+import ResetPasswordPage from './pages/ResetPasswordPage';
 import { getAccountPath } from './utils/auth';
 
 function PrivateRoute({ children, roles }: { children: React.ReactNode; roles?: string[] }) {
@@ -31,6 +33,8 @@ function AppRoutes() {
       <Route path="/" element={<LandingPage />} />
       <Route path="/catalog" element={<CatalogPage />} />
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+      <Route path="/reset-password" element={<ResetPasswordPage />} />
       <Route path="/register" element={<RegisterPage />} />
       <Route path="/cart" element={<PrivateRoute roles={['client']}><CartPage /></PrivateRoute>} />
       <Route path="/checkout" element={<PrivateRoute roles={['client']}><CheckoutPage /></PrivateRoute>} />

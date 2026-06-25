@@ -7,6 +7,11 @@ from django.db.models import Q, Sum, Count, Avg
 from django.db.models.functions import TruncMonth
 from django.utils import timezone
 from django.contrib.auth import get_user_model
+from django.contrib.auth.tokens import default_token_generator
+from django.core.mail import send_mail
+from django.conf import settings
+from django.utils.encoding import force_bytes, force_str
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from captcha.helpers import captcha_image_url
 from captcha.models import CaptchaStore
 
@@ -14,6 +19,7 @@ from .models import ProfessorProfile
 from .serializers import (
     UserSerializer, MeProfileSerializer, RegisterSerializer, LoginSerializer,
     InternalUserCreateSerializer, ProfessorProfileSerializer,
+    PasswordResetRequestSerializer, PasswordResetConfirmSerializer,
 )
 from .permissions import IsAdminOrDirector, IsAdminDirectorOrProfessor, IsClient
 
@@ -197,6 +203,59 @@ class MeView(generics.RetrieveUpdateAPIView):
 
     def get_object(self):
         return self.request.user
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def password_reset_request(request):
+    serializer = PasswordResetRequestSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+    email = serializer.validated_data['email']
+    message = 'Si el correo está registrado, recibirás instrucciones para restablecer tu contraseña.'
+
+    try:
+        user = User.objects.get(email=email)
+    except User.DoesNotExist:
+        return Response({'detail': message})
+
+    uid = urlsafe_base64_encode(force_bytes(user.pk))
+    token = default_token_generator.make_token(user)
+    frontend_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:5173')
+    reset_link = f'{frontend_url}/reset-password?uid={uid}&token={token}'
+
+    send_mail(
+        subject='RITMOFLOW — Recuperar contraseña',
+        message=(
+            f'Hola {user.first_name},\n\n'
+            f'Para restablecer tu contraseña visita el siguiente enlace:\n{reset_link}\n\n'
+            'Si no solicitaste este cambio, ignora este mensaje.'
+        ),
+        from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', 'noreply@ritmoflow.com'),
+        recipient_list=[user.email],
+        fail_silently=False,
+    )
+    return Response({'detail': message})
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def password_reset_confirm(request):
+    serializer = PasswordResetConfirmSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+    data = serializer.validated_data
+
+    try:
+        uid = force_str(urlsafe_base64_decode(data['uid']))
+        user = User.objects.get(pk=uid)
+    except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+        return Response({'detail': 'Enlace inválido o expirado'}, status=400)
+
+    if not default_token_generator.check_token(user, data['token']):
+        return Response({'detail': 'Enlace inválido o expirado'}, status=400)
+
+    user.set_password(data['password'])
+    user.save()
+    return Response({'detail': 'Contraseña actualizada correctamente'})
 
 
 class InternalUserViewSet(viewsets.ModelViewSet):
