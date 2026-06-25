@@ -4,13 +4,14 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.db import transaction
 
+from users.permissions import IsAdminOrDirector, IsClient
 from .models import Sale, SaleItem, PurchaseAccess
 from .serializers import SaleSerializer, CheckoutSerializer, PurchaseAccessSerializer
 from cart.models import Cart
 
 
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated, IsClient])
 def checkout(request):
     serializer = CheckoutSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
@@ -51,8 +52,6 @@ def checkout(request):
                 choreography=choreo,
                 defaults={'sale': sale},
             )
-            choreo.sales_count += 1
-            choreo.save(update_fields=['sales_count'])
 
         cart.items.all().delete()
 
@@ -67,25 +66,22 @@ def checkout(request):
 
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated, IsClient])
 def my_sales(request):
     sales = Sale.objects.filter(client=request.user).prefetch_related('items')
     return Response(SaleSerializer(sales, many=True).data)
 
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated, IsClient])
 def my_purchases(request):
     purchases = PurchaseAccess.objects.filter(client=request.user).select_related('choreography')
     return Response(PurchaseAccessSerializer(purchases, many=True).data)
 
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated, IsAdminOrDirector])
 def all_sales(request):
-    from users.models import User
-    if request.user.role not in (User.Role.ADMIN, User.Role.DIRECTOR):
-        return Response({'error': 'Sin permisos'}, status=403)
     sales = Sale.objects.all().prefetch_related('items').select_related('client')[:50]
     data = SaleSerializer(sales, many=True).data
     for i, sale in enumerate(sales):

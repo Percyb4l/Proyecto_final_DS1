@@ -38,7 +38,11 @@ class Choreography(models.Model):
     )
     guest_professor_external = models.CharField(max_length=200, blank=True)
     price = models.DecimalField(max_digits=10, decimal_places=2)
-    sales_count = models.PositiveIntegerField(default=0)
+    sales_count = models.PositiveIntegerField(
+        default=0,
+        editable=False,
+        help_text='Calculado automáticamente a partir de ventas completadas.',
+    )
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.DRAFT)
     thumbnail_emoji = models.CharField(max_length=10, default='💃')
     rating = models.DecimalField(max_digits=2, decimal_places=1, default=4.5)
