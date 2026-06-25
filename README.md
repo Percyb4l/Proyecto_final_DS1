@@ -4,13 +4,6 @@ Proyecto final de **Desarrollo de Software I** (750009C) - Universidad del Valle
 
 Plataforma web para una academia en línea de baile que gestiona usuarios internos, clientes, catálogo de coreografías en video, carrito de compras y proceso de ventas.
 
-## Documentos del proyecto
-
-- `2026A-DS1-DescripcionInicialProyecto.pdf` - Descripción oficial del proyecto
-- `Elicitación_ Resolución de preguntas sobre requerimientos del proyecto de curso.pdf` - Respuestas de elicitación
-- `Entrega 1 - Desarrollo de software l.pdf` - Entrega Sprint 0 y 1
-- `Dance Academy Web UI Mockup.make` - Mockup Figma (RITMOFLOW)
-
 ## Stack tecnológico
 
 | Capa | Tecnología |
@@ -44,21 +37,37 @@ Plataforma web para una academia en línea de baile que gestiona usuarios intern
 - Node.js 18+
 - PostgreSQL 14+
 
-### Base de datos
-```bash
-sudo -u postgres psql -c "CREATE DATABASE ritmoflow;"
+### Base de datos (Windows)
+```powershell
+psql -U postgres -c "CREATE DATABASE ritmoflow;"
+```
+
+Te pedirá la contraseña del usuario `postgres` que definiste al instalar PostgreSQL.
+
+### Variables de entorno
+
+Crea un archivo `.env` en la raíz del proyecto con:
+
+```env
+DJANGO_SECRET_KEY=tu-clave-secreta
+DEBUG=True
+DB_NAME=ritmoflow
+DB_USER=postgres
+DB_PASSWORD=tu_contraseña_de_postgresql
+DB_HOST=localhost
+DB_PORT=5432
 ```
 
 ### Backend (Django)
-```bash
+```powershell
 pip install -r requirements.txt
-python3 manage.py migrate
-python3 manage.py seed_data
-python3 manage.py runserver
+python manage.py migrate
+python manage.py seed_data
+python manage.py runserver
 ```
 
 ### Frontend (React)
-```bash
+```powershell
 cd frontend
 npm install
 npm run dev
