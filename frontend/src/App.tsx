@@ -14,6 +14,7 @@ import AdminProfessorsPage from './pages/AdminProfessorsPage';
 import AdminSettingsPage from './pages/AdminSettingsPage';
 import ProfessorDashboardPage from './pages/ProfessorDashboardPage';
 import PurchaseViewPage from './pages/PurchaseViewPage';
+import CheckoutPage from './pages/CheckoutPage';
 import { getAccountPath } from './utils/auth';
 
 function PrivateRoute({ children, roles }: { children: React.ReactNode; roles?: string[] }) {
@@ -32,6 +33,7 @@ function AppRoutes() {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
       <Route path="/cart" element={<PrivateRoute roles={['client']}><CartPage /></PrivateRoute>} />
+      <Route path="/checkout" element={<PrivateRoute roles={['client']}><CheckoutPage /></PrivateRoute>} />
       <Route path="/dashboard" element={<PrivateRoute roles={['client']}><ClientDashboardPage /></PrivateRoute>} />
       <Route path="/my-choreographies/:purchaseId" element={<PrivateRoute roles={['client']}><PurchaseViewPage /></PrivateRoute>} />
       <Route path="/professor" element={<PrivateRoute roles={['professor']}><ProfessorDashboardPage /></PrivateRoute>} />

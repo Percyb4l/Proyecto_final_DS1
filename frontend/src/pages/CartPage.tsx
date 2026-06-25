@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Trash2, Lock, Video } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Trash2, Video } from 'lucide-react';
 import Navbar from '../components/Navbar';
-import { cartApi, salesApi } from '../services/api';
+import { cartApi } from '../services/api';
 import type { Cart } from '../types';
 import { GENRE_LABELS, formatPrice } from '../types';
 
@@ -10,8 +10,6 @@ const THUMB_COLORS = ['#FF6B1A', '#E91E8C'];
 
 export default function CartPage() {
   const [cart, setCart] = useState<Cart | null>(null);
-  const [paymentMethod, setPaymentMethod] = useState('card');
-  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const load = () => cartApi.get().then((r) => setCart(r.data)).catch(() => {});
@@ -21,25 +19,6 @@ export default function CartPage() {
   const handleRemove = async (id: number) => {
     await cartApi.remove(id);
     load();
-  };
-
-  const handleCheckout = async () => {
-    setLoading(true);
-    try {
-      const user = JSON.parse(localStorage.getItem('user') || '{}');
-      await salesApi.checkout({
-        payment_method: paymentMethod,
-        billing_name: user.full_name || `${user.first_name} ${user.last_name}`,
-        billing_email: user.email,
-        billing_phone: user.phone || '',
-      });
-      alert('¡Compra realizada con éxito!');
-      navigate('/dashboard');
-    } catch {
-      alert('Error al procesar la compra');
-    } finally {
-      setLoading(false);
-    }
   };
 
   const subtotal = cart?.total || 0;
@@ -63,7 +42,8 @@ export default function CartPage() {
 
         {cart.items.length === 0 ? (
           <div className="card-light p-12 text-center">
-            <p className="text-xl text-gray-400">Tu carrito está vacío</p>
+            <p className="text-xl text-gray-400 mb-4">Tu carrito está vacío</p>
+            <Link to="/catalog" className="text-[#E91E8C] hover:underline">Explorar catálogo</Link>
           </div>
         ) : (
           <div className="grid lg:grid-cols-3 gap-8">
@@ -88,7 +68,7 @@ export default function CartPage() {
                       </div>
                     </div>
                     <span className="font-display text-2xl text-[#FF6B1A]">{formatPrice(item.subtotal)}</span>
-                    <button onClick={() => handleRemove(item.id)} className="text-red-400 hover:text-red-300">
+                    <button type="button" onClick={() => handleRemove(item.id)} className="text-red-400 hover:text-red-300">
                       <Trash2 className="w-5 h-5" />
                     </button>
                   </div>
@@ -97,45 +77,18 @@ export default function CartPage() {
             </div>
 
             <div className="card-light p-6 h-fit">
-              <h2 className="font-display text-xl tracking-wide mb-4">RESUMEN DE COMPRA</h2>
+              <h2 className="font-display text-xl tracking-wide mb-4">RESUMEN</h2>
               <div className="space-y-2 text-sm text-gray-400 mb-4">
-                <div className="flex justify-between">
-                  <span>Subtotal</span>
-                  <span>{formatPrice(subtotal)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>IVA (19%)</span>
-                  <span>{formatPrice(tax)}</span>
-                </div>
+                <div className="flex justify-between"><span>Subtotal</span><span>{formatPrice(subtotal)}</span></div>
+                <div className="flex justify-between"><span>IVA (19%)</span><span>{formatPrice(tax)}</span></div>
               </div>
               <div className="border-t border-[#333] pt-4 flex justify-between items-center mb-6">
                 <span className="font-semibold">Total</span>
                 <span className="font-display text-3xl text-[#FF6B1A]">{formatPrice(total)}</span>
               </div>
-
-              <p className="text-sm text-gray-400 mb-2">Método de pago</p>
-              <div className="flex gap-2 mb-6">
-                {['card', 'pse'].map((m) => (
-                  <button
-                    key={m}
-                    onClick={() => setPaymentMethod(m)}
-                    className={`flex-1 py-3 rounded-xl text-sm transition-all ${
-                      paymentMethod === m
-                        ? 'bg-gradient-to-r from-[#FF6B1A] to-[#E91E8C] text-white'
-                        : 'bg-[#111] border border-[#333] text-gray-400 hover:border-[#FF6B1A]'
-                    }`}
-                  >
-                    {m === 'card' ? 'Tarjeta' : 'PSE'}
-                  </button>
-                ))}
-              </div>
-
-              <button onClick={handleCheckout} disabled={loading} className="gradient-btn w-full py-4">
-                {loading ? 'Procesando...' : 'Proceder al pago'}
+              <button type="button" onClick={() => navigate('/checkout')} className="gradient-btn w-full py-4">
+                Proceder a facturación
               </button>
-              <p className="text-xs text-gray-500 text-center mt-4 flex items-center justify-center gap-1">
-                <Lock className="w-3 h-3" /> Pago seguro (simulado)
-              </p>
             </div>
           </div>
         )}
