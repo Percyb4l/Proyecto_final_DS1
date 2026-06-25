@@ -126,3 +126,19 @@ class LoginSerializer(serializers.Serializer):
             raise serializers.ValidationError({'detail': 'Usuario inactivo'})
         data['user'] = user
         return data
+
+
+class PasswordResetRequestSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+
+
+class PasswordResetConfirmSerializer(serializers.Serializer):
+    uid = serializers.CharField()
+    token = serializers.CharField()
+    password = serializers.CharField(min_length=6)
+    password_confirm = serializers.CharField(min_length=6)
+
+    def validate(self, data):
+        if data['password'] != data['password_confirm']:
+            raise serializers.ValidationError({'password_confirm': 'Las contraseñas no coinciden'})
+        return data

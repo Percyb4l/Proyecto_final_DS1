@@ -27,6 +27,8 @@ export const authApi = {
   register: (data: object) => api.post('/auth/register/', data),
   me: () => api.get('/auth/me/'),
   updateMe: (data: object) => api.patch('/auth/me/', data),
+  passwordResetRequest: (email: string) => api.post('/auth/password-reset/', { email }),
+  passwordResetConfirm: (data: object) => api.post('/auth/password-reset/confirm/', data),
 };
 
 export const choreoApi = {

@@ -96,3 +96,7 @@ CORS_ALLOW_CREDENTIALS = True
 
 CAPTCHA_LENGTH = 5
 CAPTCHA_FONT_SIZE = 28
+
+EMAIL_BACKEND = os.getenv('EMAIL_BACKEND', 'django.core.mail.backends.console.EmailBackend')
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'noreply@ritmoflow.com')
+FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://localhost:5173')
