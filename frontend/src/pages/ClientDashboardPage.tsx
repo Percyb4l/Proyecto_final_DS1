@@ -280,9 +280,12 @@ export default function ClientDashboardPage() {
                       </div>
                     </div>
                   </div>
-                  <button className="gradient-btn text-sm py-3 px-8 whitespace-nowrap">
+                  <Link
+                    to={`/my-choreographies/${p.id}`}
+                    className="gradient-btn text-sm py-3 px-8 whitespace-nowrap text-center"
+                  >
                     {p.progress_percent === 100 ? 'Repetir' : 'Continuar'}
-                  </button>
+                  </Link>
                 </div>
               </div>
             ))}

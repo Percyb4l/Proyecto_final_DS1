@@ -36,3 +36,14 @@ class PurchaseAccessSerializer(serializers.ModelSerializer):
     class Meta:
         model = PurchaseAccess
         fields = ['id', 'choreography', 'videos_watched', 'progress_percent', 'purchased_at']
+
+
+class PurchaseAccessDetailSerializer(PurchaseAccessSerializer):
+    """Incluye videos solo para compras verificadas del cliente."""
+
+    class Meta(PurchaseAccessSerializer.Meta):
+        fields = PurchaseAccessSerializer.Meta.fields
+
+
+class MarkVideoWatchedSerializer(serializers.Serializer):
+    part_number = serializers.IntegerField(min_value=1)
