@@ -1,3 +1,4 @@
+from decimal import Decimal
 from rest_framework import serializers
 from .models import Sale, SaleItem, PurchaseAccess
 from choreographies.serializers import ChoreographySerializer
@@ -27,6 +28,17 @@ class CheckoutSerializer(serializers.Serializer):
     billing_email = serializers.EmailField()
     billing_phone = serializers.CharField(required=False, allow_blank=True)
     billing_address = serializers.CharField(required=False, allow_blank=True)
+    city = serializers.CharField(required=False, allow_blank=True, max_length=100)
+    department = serializers.CharField(required=False, allow_blank=True, max_length=100)
+    country = serializers.CharField(required=False, allow_blank=True, max_length=100)
+    first_name = serializers.CharField(required=False, allow_blank=True, max_length=150)
+    last_name = serializers.CharField(required=False, allow_blank=True, max_length=150)
+
+
+class CheckoutPurchaseSummarySerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    title = serializers.CharField()
+    choreography_id = serializers.IntegerField()
 
 
 class PurchaseAccessSerializer(serializers.ModelSerializer):

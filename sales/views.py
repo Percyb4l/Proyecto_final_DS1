@@ -1,3 +1,4 @@
+from decimal import Decimal
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
@@ -32,7 +33,9 @@ def checkout(request):
         return Response({'error': 'Carrito vacío'}, status=400)
 
     with transaction.atomic():
-        total = sum(item.choreography.price for item in items)
+        subtotal = sum(item.choreography.price for item in items)
+        tax = (subtotal * Decimal('0.19')).quantize(Decimal('0.01'))
+        total = subtotal + tax
         sale = Sale.objects.create(
             client=request.user,
             total_amount=total,
@@ -44,6 +47,7 @@ def checkout(request):
             billing_address=data.get('billing_address', ''),
         )
 
+        purchase_ids = []
         for item in items:
             choreo = item.choreography
             SaleItem.objects.create(
@@ -52,22 +56,46 @@ def checkout(request):
                 price=choreo.price,
                 choreography_title=choreo.title,
             )
-            PurchaseAccess.objects.get_or_create(
+            access, _ = PurchaseAccess.objects.get_or_create(
                 client=request.user,
                 choreography=choreo,
                 defaults={'sale': sale},
             )
+            if access.sale_id != sale.id:
+                access.sale = sale
+                access.save(update_fields=['sale'])
+            purchase_ids.append({
+                'id': access.id,
+                'title': choreo.title,
+                'choreography_id': choreo.id,
+            })
 
         cart.items.all().delete()
 
         user = request.user
+        if data.get('first_name'):
+            user.first_name = data['first_name']
+        if data.get('last_name'):
+            user.last_name = data['last_name']
         if data.get('billing_phone'):
             user.phone = data['billing_phone']
         if data.get('billing_address'):
             user.billing_address = data['billing_address']
+        if data.get('city'):
+            user.city = data['city']
+        if data.get('department'):
+            user.department = data['department']
+        if data.get('country'):
+            user.country = data['country']
         user.save()
 
-    return Response(SaleSerializer(sale).data, status=status.HTTP_201_CREATED)
+    return Response({
+        'sale': SaleSerializer(sale).data,
+        'subtotal': float(subtotal),
+        'tax': float(tax),
+        'total': float(total),
+        'purchases': purchase_ids,
+    }, status=status.HTTP_201_CREATED)
 
 
 def _client_purchase_or_404(user, purchase_id):
