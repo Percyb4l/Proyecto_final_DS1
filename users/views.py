@@ -3,19 +3,153 @@ from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
-from django.db.models import Q, Sum, Count
+from django.db.models import Q, Sum, Count, Avg
+from django.db.models.functions import TruncMonth
+from django.utils import timezone
 from django.contrib.auth import get_user_model
 from captcha.helpers import captcha_image_url
 from captcha.models import CaptchaStore
 
 from .models import ProfessorProfile
 from .serializers import (
-    UserSerializer, RegisterSerializer, LoginSerializer,
+    UserSerializer, MeProfileSerializer, RegisterSerializer, LoginSerializer,
     InternalUserCreateSerializer, ProfessorProfileSerializer,
 )
-from .permissions import IsAdminOrDirector, IsAdminDirectorOrProfessor
+from .permissions import IsAdminOrDirector, IsAdminDirectorOrProfessor, IsClient
 
 User = get_user_model()
+
+MONTH_SHORT = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
+GENRE_LABELS = {
+    'salsa': 'Salsa', 'bachata': 'Bachata', 'merengue': 'Merengue',
+    'hip_hop': 'Hip-Hop', 'pop': 'Pop', 'reggaeton': 'Reggaeton', 'contemporaneo': 'Contemporáneo',
+}
+
+
+def _last_six_month_periods():
+    now = timezone.now()
+    year, month = now.year, now.month
+    periods = []
+    for _ in range(6):
+        periods.append((year, month))
+        month -= 1
+        if month == 0:
+            month = 12
+            year -= 1
+    return list(reversed(periods))
+
+
+def _month_label(year, month):
+    return MONTH_SHORT[month - 1]
+
+
+def _series_from_periods(periods, values_by_period, value_key='value'):
+    return [
+        {
+            'month': _month_label(year, month),
+            'year': year,
+            value_key: float(values_by_period.get((year, month), 0)),
+        }
+        for year, month in periods
+    ]
+
+
+def build_admin_dashboard_stats():
+    from choreographies.models import Choreography
+    from sales.models import Sale, SaleItem
+
+    periods = _last_six_month_periods()
+    start = timezone.datetime(periods[0][0], periods[0][1], 1, tzinfo=timezone.get_current_timezone())
+
+    completed_sales = Sale.objects.filter(status=Sale.Status.COMPLETED)
+    total_revenue = completed_sales.aggregate(total=Sum('total_amount'))['total'] or 0
+    total_sales_count = completed_sales.count()
+    average_ticket = float(
+        completed_sales.aggregate(avg=Avg('total_amount'))['avg'] or 0
+    )
+
+    totalizers = {
+        'active_users': User.objects.filter(is_active=True).count(),
+        'published_choreographies': Choreography.objects.filter(
+            status=Choreography.Status.PUBLISHED
+        ).count(),
+        'total_revenue': float(total_revenue),
+        'total_sales_count': total_sales_count,
+        'average_ticket': average_ticket,
+    }
+
+    sales_by_month = {
+        (row['month'].year, row['month'].month): row['amount']
+        for row in completed_sales.filter(created_at__gte=start)
+        .annotate(month=TruncMonth('created_at'))
+        .values('month')
+        .annotate(amount=Sum('total_amount'))
+    }
+
+    registrations_by_month = {
+        (row['month'].year, row['month'].month): row['count']
+        for row in User.objects.filter(role=User.Role.CLIENT, date_joined__gte=start)
+        .annotate(month=TruncMonth('date_joined'))
+        .values('month')
+        .annotate(count=Count('id'))
+    }
+
+    top_choreographies = list(
+        SaleItem.objects.filter(sale__status=Sale.Status.COMPLETED)
+        .values('choreography_title', 'choreography__genre')
+        .annotate(sales_count=Count('id'), revenue=Sum('price'))
+        .order_by('-sales_count')[:5]
+    )
+    for item in top_choreographies:
+        item['title'] = item.pop('choreography_title')
+        item['genre'] = GENRE_LABELS.get(item['choreography__genre'], item['choreography__genre'])
+        item.pop('choreography__genre', None)
+        item['revenue'] = float(item['revenue'] or 0)
+        item['sales_count'] = int(item['sales_count'])
+
+    if not top_choreographies:
+        top_choreographies = [
+            {
+                'title': c.title,
+                'genre': GENRE_LABELS.get(c.genre, c.genre),
+                'sales_count': c.sales_count,
+                'revenue': float(c.sales_count) * float(c.price),
+            }
+            for c in Choreography.objects.filter(status=Choreography.Status.PUBLISHED)
+            .order_by('-sales_count')[:5]
+        ]
+
+    revenue_by_genre = list(
+        SaleItem.objects.filter(sale__status=Sale.Status.COMPLETED)
+        .values('choreography__genre')
+        .annotate(revenue=Sum('price'), count=Count('id'))
+        .order_by('-revenue')
+    )
+    for row in revenue_by_genre:
+        row['genre'] = GENRE_LABELS.get(row['choreography__genre'], row['choreography__genre'])
+        row['revenue'] = float(row['revenue'] or 0)
+        row['count'] = int(row['count'])
+        row.pop('choreography__genre', None)
+
+    clients_by_country = list(
+        User.objects.filter(role=User.Role.CLIENT, is_active=True)
+        .values('country')
+        .annotate(count=Count('id'))
+        .order_by('-count')
+    )
+    for row in clients_by_country:
+        row['country'] = row['country'] or 'Sin país'
+
+    statistics = {
+        'monthly_sales': _series_from_periods(periods, sales_by_month, 'amount'),
+        'monthly_registrations': _series_from_periods(periods, registrations_by_month, 'count'),
+        'top_choreographies': top_choreographies,
+        'revenue_by_genre': revenue_by_genre,
+        'average_ticket': average_ticket,
+        'clients_by_country': clients_by_country,
+    }
+
+    return {'totalizers': totalizers, 'statistics': statistics}
 
 
 @api_view(['GET'])
@@ -58,7 +192,8 @@ class LoginView(generics.GenericAPIView):
 
 
 class MeView(generics.RetrieveUpdateAPIView):
-    serializer_class = UserSerializer
+    permission_classes = [IsAuthenticated]
+    serializer_class = MeProfileSerializer
 
     def get_object(self):
         return self.request.user
@@ -103,57 +238,13 @@ class ProfessorViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated, IsAdminOrDirector])
 def admin_dashboard(request):
-    if request.user.role not in (User.Role.ADMIN, User.Role.DIRECTOR):
-        return Response({'error': 'Sin permisos'}, status=403)
-
-    from choreographies.models import Choreography
-    from sales.models import Sale, SaleItem
-
-    total_sales = Sale.objects.filter(status='completed').aggregate(total=Sum('total_amount'))['total'] or 0
-    choreos_sold = SaleItem.objects.count()
-    active_clients = User.objects.filter(role=User.Role.CLIENT, is_active=True).count()
-    professors = User.objects.filter(role=User.Role.PROFESSOR, is_active=True).count()
-
-    sales_by_genre = list(
-        SaleItem.objects.values('choreography__genre')
-        .annotate(count=Count('id'), revenue=Sum('price'))
-        .order_by('-count')
-    )
-
-    top_choreos = list(
-        Choreography.objects.filter(status='published')
-        .order_by('-sales_count')[:5]
-        .values('title', 'sales_count', 'price', 'genre')
-    )
-    for c in top_choreos:
-        c['revenue'] = float(c['sales_count']) * float(c['price'])
-
-    monthly_sales = [
-        {'month': 'Ene', 'amount': 2400000},
-        {'month': 'Feb', 'amount': 3100000},
-        {'month': 'Mar', 'amount': 2800000},
-        {'month': 'Abr', 'amount': 4200000},
-        {'month': 'May', 'amount': 3900000},
-        {'month': 'Jun', 'amount': float(total_sales) or 4500000},
-    ]
-
-    return Response({
-        'metrics': {
-            'total_sales': float(total_sales),
-            'choreos_sold': choreos_sold,
-            'active_clients': active_clients,
-            'professors': professors,
-        },
-        'sales_by_genre': sales_by_genre,
-        'top_choreographies': top_choreos,
-        'monthly_sales': monthly_sales,
-    })
+    return Response(build_admin_dashboard_stats())
 
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated, IsClient])
 def client_dashboard(request):
     from collections import Counter
     from django.db.models.functions import TruncMonth
