@@ -1,11 +1,12 @@
 /**
- * Gestión CRUD de usuarios internos (admin, director, profesor).
+ * Gestión CRUD de usuarios del sistema (admin, director, profesor y cliente).
  */
 import { useEffect, useState } from 'react';
 import { Plus, Trash2, Pencil } from 'lucide-react';
 import AdminLayout from '../components/AdminLayout';
 import { usersApi } from '../services/api';
 import type { User } from '../types';
+import { ROLE_LABELS } from '../types';
 
 export default function AdminUsersPage() {
   const [users, setUsers] = useState<User[]>([]);
@@ -72,7 +73,7 @@ export default function AdminUsersPage() {
   return (
     <AdminLayout>
       <div className="flex justify-between items-center mb-6">
-        <h1 className="font-display text-3xl tracking-wide">USUARIOS INTERNOS</h1>
+        <h1 className="font-display text-3xl tracking-wide">GESTIÓN DE USUARIOS</h1>
         <button onClick={() => { resetForm(); setShowForm(true); }} className="gradient-btn flex items-center gap-2 text-sm"><Plus className="w-4 h-4" /> Nuevo</button>
       </div>
 
@@ -83,6 +84,7 @@ export default function AdminUsersPage() {
           <option value="admin">Administrador</option>
           <option value="director">Director</option>
           <option value="professor">Profesor</option>
+          <option value="client">Cliente</option>
         </select>
       </div>
 
@@ -97,6 +99,7 @@ export default function AdminUsersPage() {
             <option value="admin">Administrador</option>
             <option value="director">Director</option>
             <option value="professor">Profesor</option>
+            <option value="client">Cliente</option>
           </select>
           <input className="input-field" placeholder="Documento" value={form.document_number} onChange={(e) => setForm({ ...form, document_number: e.target.value })} />
           {form.role === 'professor' && (
@@ -124,7 +127,7 @@ export default function AdminUsersPage() {
               <tr key={u.id} className="border-b border-[#333]/50">
                 <td className="p-4">{u.full_name}</td>
                 <td className="p-4 text-gray-400">{u.email}</td>
-                <td className="p-4 capitalize text-[#E91E8C]">{u.role}</td>
+                <td className="p-4 text-[#E91E8C]">{ROLE_LABELS[u.role] || u.role}</td>
                 <td className="p-4">{u.document_number}</td>
                 <td className="p-4 flex gap-3">
                   <button type="button" onClick={() => startEdit(u)} className="text-[#FF6B1A]"><Pencil className="w-4 h-4" /></button>

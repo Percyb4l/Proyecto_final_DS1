@@ -7,6 +7,7 @@ import type { FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { GoogleButton, FacebookButton, AuthDivider } from '../components/SocialLogin';
+import { formatApiError } from '../utils/apiError';
 
 export default function RegisterPage() {
   const [form, setForm] = useState({
@@ -31,9 +32,8 @@ export default function RegisterPage() {
       });
       navigate('/dashboard');
     } catch (err: unknown) {
-      const axiosErr = err as { response?: { data?: Record<string, string> } };
-      const data = axiosErr.response?.data;
-      setError(Object.values(data || {})[0] as string || 'Error al registrarse');
+      const axiosErr = err as { response?: { data?: unknown } };
+      setError(formatApiError(axiosErr.response?.data, 'Error al registrarse'));
     } finally {
       setLoading(false);
     }

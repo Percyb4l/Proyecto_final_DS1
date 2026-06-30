@@ -277,13 +277,13 @@ def password_reset_confirm(request):
 
 
 class InternalUserViewSet(viewsets.ModelViewSet):
-    """CRUD de usuarios internos (admin, director, profesor). Solo Admin/Director."""
+    """CRUD de usuarios del sistema (internos y clientes). Solo Admin/Director."""
 
     serializer_class = UserSerializer
     permission_classes = [IsAuthenticated, IsAdminOrDirector]
 
     def get_queryset(self):
-        qs = User.objects.filter(role__in=[User.Role.ADMIN, User.Role.DIRECTOR, User.Role.PROFESSOR])
+        qs = User.objects.all()
         role = self.request.query_params.get('role')
         search = self.request.query_params.get('search')
         if role:

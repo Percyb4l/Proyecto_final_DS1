@@ -18,8 +18,16 @@ const FILTERS = [
 
 const THUMB_COLORS = ['#FF6B1A', '#E91E8C'];
 
+function getAddToCartError(e: unknown): string {
+  const data = (e as { response?: { data?: Record<string, unknown> } })?.response?.data;
+  if (!data) return 'No se pudo conectar con el servidor. Verifica que el backend esté corriendo.';
+  if (typeof data.error === 'string') return data.error;
+  if (typeof data.detail === 'string') return data.detail;
+  return 'Error al agregar';
+}
+
 export default function CatalogPage() {
-  const { user } = useAuth();
+  const { user, isClient } = useAuth();
   const [choreos, setChoreos] = useState<Choreography[]>([]);
   const [activeFilter, setActiveFilter] = useState('all');
   const [search, setSearch] = useState('');
@@ -37,12 +45,15 @@ export default function CatalogPage() {
 
   const handleAdd = async (id: number) => {
     if (!user) { window.location.href = '/login'; return; }
+    if (!isClient) {
+      alert('Solo las cuentas de cliente pueden comprar. Usa ana@ritmoflow.com o regístrate como cliente.');
+      return;
+    }
     try {
       await cartApi.add(id);
       alert('¡Agregado al carrito!');
     } catch (e: unknown) {
-      const err = e as { response?: { data?: { error?: string } } };
-      alert(err.response?.data?.error || 'Error al agregar');
+      alert(getAddToCartError(e));
     }
   };
 

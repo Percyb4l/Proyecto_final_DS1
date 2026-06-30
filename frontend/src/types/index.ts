@@ -57,6 +57,13 @@ export interface PurchaseAccess {
   purchased_at: string;
 }
 
+export const ROLE_LABELS: Record<string, string> = {
+  admin: 'Administrador',
+  director: 'Director',
+  professor: 'Profesor',
+  client: 'Cliente',
+};
+
 export const GENRE_LABELS: Record<string, string> = {
   salsa: 'Salsa', bachata: 'Bachata', merengue: 'Merengue',
   hip_hop: 'Hip-Hop', pop: 'Pop', reggaeton: 'Reggaeton', contemporaneo: 'Contemporáneo',
