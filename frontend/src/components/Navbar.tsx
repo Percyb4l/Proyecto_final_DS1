@@ -2,14 +2,20 @@
  * Barra de navegación principal.
  * Muestra enlaces según si el usuario está autenticado y su rol.
  */
-import { Link } from 'react-router-dom';
-import { ShoppingCart } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { ShoppingCart, LogOut } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { getAccountPath } from '../utils/auth';
 
 export default function Navbar() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
   const accountPath = user ? getAccountPath(user.role) : '/login';
+
+  const handleLogout = () => {
+    logout();
+    navigate('/');
+  };
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-[#111]/95 backdrop-blur border-b border-[#333]">
@@ -34,6 +40,14 @@ export default function Navbar() {
                   <ShoppingCart className="w-5 h-5" />
                 </Link>
               )}
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="flex items-center gap-2 text-sm text-red-400 hover:text-red-300 transition-colors"
+              >
+                <LogOut className="w-4 h-4" />
+                Cerrar sesión
+              </button>
             </>
           ) : (
             <>

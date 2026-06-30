@@ -25,11 +25,14 @@ export default function AdminSalesPage() {
 
   useEffect(() => {
     salesApi.allSales().then((r) => {
-      setSales(r.data);
-      const total = r.data.reduce((s: number, sale: Sale) => s + Number(sale.total_amount), 0);
-      setMetrics({ total, count: r.data.length });
+      const list = Array.isArray(r.data) ? r.data : [];
+      setSales(list);
+      const total = list.reduce((s: number, sale: Sale) => s + Number(sale.total_amount), 0);
+      setMetrics({ total, count: list.length });
     }).catch(() => {});
-    dashboardApi.admin().then((r) => setMonthly(r.data.monthly_sales)).catch(() => {});
+    dashboardApi.admin()
+      .then((r) => setMonthly(r.data.statistics?.monthly_sales ?? []))
+      .catch(() => {});
   }, []);
 
   return (
@@ -91,7 +94,7 @@ export default function AdminSalesPage() {
                   </td>
                   <td className="py-4">{sale.client_name || sale.billing_name}</td>
                   <td className="py-4 text-gray-400">
-                    {sale.items.map((i) => i.choreography_title).join(', ')}
+                    {(sale.items ?? []).map((i) => i.choreography_title).join(', ')}
                   </td>
                   <td className="py-4 font-display text-[#FF6B1A]">{formatPrice(sale.total_amount)}</td>
                   <td className="py-4">

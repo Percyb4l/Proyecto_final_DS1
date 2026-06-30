@@ -71,7 +71,7 @@ class RegisterSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         validated_data.pop('password_confirm')
         password = validated_data.pop('password')
-        email = validated_data['email']
+        email = validated_data.pop('email')
         user = User(
             username=email,
             email=email,
@@ -84,7 +84,7 @@ class RegisterSerializer(serializers.ModelSerializer):
 
 
 class InternalUserCreateSerializer(serializers.ModelSerializer):
-    """Creación de admin, director o profesor desde el panel de administración."""
+    """Creación de usuarios desde el panel de administración."""
 
     password = serializers.CharField(write_only=True, min_length=6)
     expertise = serializers.CharField(required=False, allow_blank=True)
@@ -116,7 +116,7 @@ class InternalUserCreateSerializer(serializers.ModelSerializer):
 
 
 class InternalUserUpdateSerializer(serializers.ModelSerializer):
-    """Actualización de usuarios internos; contraseña opcional."""
+    """Actualización de usuarios; contraseña opcional."""
 
     password = serializers.CharField(write_only=True, required=False, min_length=6)
 
