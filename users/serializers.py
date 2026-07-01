@@ -103,7 +103,7 @@ class InternalUserCreateSerializer(serializers.ModelSerializer):
         expertise = validated_data.pop('expertise', '')
         bio = validated_data.pop('bio', '')
         password = validated_data.pop('password')
-        email = validated_data['email']
+        email = validated_data.pop('email')
         role = validated_data.get('role', User.Role.PROFESSOR)
 
         user = User(username=email, email=email, **validated_data)
