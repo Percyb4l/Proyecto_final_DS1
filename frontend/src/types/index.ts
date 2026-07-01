@@ -57,6 +57,32 @@ export interface PurchaseAccess {
   purchased_at: string;
 }
 
+export interface ProfessorApplication {
+  id: number;
+  email: string;
+  first_name: string;
+  last_name: string;
+  full_name: string;
+  phone: string;
+  document_type: string;
+  document_number: string;
+  expertise: string;
+  experience: string;
+  bio: string;
+  status: 'pending' | 'approved' | 'rejected';
+  review_notes: string;
+  reviewed_by_name?: string;
+  reviewed_at?: string;
+  created_at: string;
+  applicant_name?: string;
+}
+
+export const APPLICATION_STATUS_LABELS: Record<string, string> = {
+  pending: 'Pendiente',
+  approved: 'Aprobada',
+  rejected: 'Rechazada',
+};
+
 export const ROLE_LABELS: Record<string, string> = {
   admin: 'Administrador',
   director: 'Director',

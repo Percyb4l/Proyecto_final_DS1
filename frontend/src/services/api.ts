@@ -81,3 +81,11 @@ export const usersApi = {
   deleteInternal: (id: number) => api.delete(`/auth/internal/${id}/`),
   getProfessors: () => api.get('/auth/professors/'),
 };
+
+/** Postulaciones para ser profesor bailarín. */
+export const applicationsApi = {
+  submit: (data: object) => api.post('/auth/professor-applications/', data),
+  list: (params?: object) => api.get('/auth/professor-applications/', { params }),
+  approve: (id: number, data?: object) => api.post(`/auth/professor-applications/${id}/approve/`, data),
+  reject: (id: number, data?: object) => api.post(`/auth/professor-applications/${id}/reject/`, data),
+};

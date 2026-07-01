@@ -58,3 +58,42 @@ class ProfessorProfile(models.Model):
 
     def __str__(self):
         return f'Prof. {self.user.full_name}'
+
+
+class ProfessorApplication(models.Model):
+    """Solicitud pública para convertirse en profesor bailarín."""
+
+    class Status(models.TextChoices):
+        PENDING = 'pending', 'Pendiente'
+        APPROVED = 'approved', 'Aprobada'
+        REJECTED = 'rejected', 'Rechazada'
+
+    applicant = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, blank=True, related_name='professor_applications',
+    )
+    email = models.EmailField()
+    first_name = models.CharField(max_length=150)
+    last_name = models.CharField(max_length=150)
+    phone = models.CharField(max_length=20, blank=True)
+    document_type = models.CharField(max_length=5, choices=User.DocumentType.choices, default=User.DocumentType.CC)
+    document_number = models.CharField(max_length=20)
+    expertise = models.CharField(max_length=200, help_text='Estilos o disciplinas que enseña')
+    experience = models.TextField(help_text='Trayectoria y experiencia profesional')
+    bio = models.TextField(blank=True, help_text='Presentación breve opcional')
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.PENDING)
+    review_notes = models.TextField(blank=True)
+    reviewed_by = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, blank=True, related_name='reviewed_applications',
+    )
+    reviewed_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    @property
+    def full_name(self):
+        return f'{self.first_name} {self.last_name}'.strip()
+
+    def __str__(self):
+        return f'Postulación {self.full_name} ({self.get_status_display()})'

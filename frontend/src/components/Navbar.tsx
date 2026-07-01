@@ -27,6 +27,11 @@ export default function Navbar() {
           <Link to="/catalog" className="text-sm text-[#FFF8F0] hover:text-[#FF6B1A] transition-colors">
             Catálogo
           </Link>
+          {(!user || user.role === 'client') && (
+            <Link to="/apply-professor" className="text-sm text-[#FFF8F0] hover:text-[#FF6B1A] transition-colors">
+              Ser profesor
+            </Link>
+          )}
           {user ? (
             <>
               <Link to="/profile" className="text-sm text-[#FFF8F0] hover:text-[#FF6B1A] transition-colors">

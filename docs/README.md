@@ -11,6 +11,8 @@
 | [roles-y-permisos.md](roles-y-permisos.md) | Matriz de capacidades por rol de usuario |
 | [frontend.md](frontend.md) | Estructura React, rutas, servicios y componentes |
 | [flujos.md](flujos.md) | Flujos de negocio principales (compra, aprobación, etc.) |
+| [pruebas.md](pruebas.md) | Plan de pruebas manuales y automatizadas |
+| [pruebas-unitarias.md](pruebas-unitarias.md) | Pruebas unitarias automatizadas del backend (39 tests) |
 
 ## Resumen del sistema
 

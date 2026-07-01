@@ -7,7 +7,7 @@ de profesor al registrar usuarios internos.
 from rest_framework import serializers
 from django.contrib.auth import authenticate
 from captcha.models import CaptchaStore
-from .models import User, ProfessorProfile
+from .models import User, ProfessorProfile, ProfessorApplication
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -103,7 +103,7 @@ class InternalUserCreateSerializer(serializers.ModelSerializer):
         expertise = validated_data.pop('expertise', '')
         bio = validated_data.pop('bio', '')
         password = validated_data.pop('password')
-        email = validated_data['email']
+        email = validated_data.pop('email')
         role = validated_data.get('role', User.Role.PROFESSOR)
 
         user = User(username=email, email=email, **validated_data)
@@ -163,6 +163,78 @@ class LoginSerializer(serializers.Serializer):
             raise serializers.ValidationError({'detail': 'Usuario inactivo'})
         data['user'] = user
         return data
+
+
+class ProfessorApplicationSerializer(serializers.ModelSerializer):
+    full_name = serializers.ReadOnlyField()
+    applicant_name = serializers.SerializerMethodField()
+    reviewed_by_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ProfessorApplication
+        fields = [
+            'id', 'email', 'first_name', 'last_name', 'full_name', 'phone',
+            'document_type', 'document_number', 'expertise', 'experience', 'bio',
+            'status', 'review_notes', 'reviewed_by_name', 'reviewed_at', 'created_at',
+            'applicant_name',
+        ]
+        read_only_fields = fields
+
+    def get_applicant_name(self, obj):
+        return obj.applicant.full_name if obj.applicant else None
+
+    def get_reviewed_by_name(self, obj):
+        return obj.reviewed_by.full_name if obj.reviewed_by else None
+
+
+class ProfessorApplicationCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProfessorApplication
+        fields = [
+            'email', 'first_name', 'last_name', 'phone', 'document_type',
+            'document_number', 'expertise', 'experience', 'bio',
+        ]
+
+    def validate_email(self, value):
+        user = User.objects.filter(email=value).first()
+        if user and user.role in (User.Role.ADMIN, User.Role.DIRECTOR, User.Role.PROFESSOR):
+            raise serializers.ValidationError('Este correo ya pertenece a un usuario del equipo interno.')
+        if ProfessorApplication.objects.filter(email=value, status=ProfessorApplication.Status.PENDING).exists():
+            raise serializers.ValidationError('Ya hay una postulación pendiente con este correo.')
+        return value
+
+    def validate(self, data):
+        request = self.context['request']
+        if request.user.is_authenticated:
+            if request.user.role in (User.Role.ADMIN, User.Role.DIRECTOR, User.Role.PROFESSOR):
+                raise serializers.ValidationError('Los usuarios internos no pueden postularse como profesor.')
+            if ProfessorApplication.objects.filter(
+                applicant=request.user, status=ProfessorApplication.Status.PENDING,
+            ).exists():
+                raise serializers.ValidationError('Ya tienes una postulación pendiente.')
+        doc = data.get('document_number')
+        if doc and ProfessorApplication.objects.filter(
+            document_number=doc, status=ProfessorApplication.Status.PENDING,
+        ).exists():
+            raise serializers.ValidationError({'document_number': 'Ya hay una postulación pendiente con este documento.'})
+        return data
+
+    def create(self, validated_data):
+        request = self.context['request']
+        applicant = request.user if request.user.is_authenticated else None
+        if applicant:
+            validated_data.setdefault('email', applicant.email)
+            validated_data.setdefault('first_name', applicant.first_name)
+            validated_data.setdefault('last_name', applicant.last_name)
+            validated_data.setdefault('phone', applicant.phone or '')
+            validated_data.setdefault('document_number', applicant.document_number or validated_data.get('document_number'))
+            validated_data.setdefault('document_type', applicant.document_type or validated_data.get('document_type', 'CC'))
+        return ProfessorApplication.objects.create(applicant=applicant, **validated_data)
+
+
+class ProfessorApplicationReviewSerializer(serializers.Serializer):
+    review_notes = serializers.CharField(required=False, allow_blank=True)
+    password = serializers.CharField(required=False, min_length=6, write_only=True)
 
 
 class PasswordResetRequestSerializer(serializers.Serializer):
