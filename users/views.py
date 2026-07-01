@@ -21,12 +21,14 @@ from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from captcha.helpers import captcha_image_url
 from captcha.models import CaptchaStore
 
-from .models import ProfessorProfile
+from .models import ProfessorProfile, ProfessorApplication
 from .serializers import (
     UserSerializer, MeProfileSerializer, RegisterSerializer, LoginSerializer,
     InternalUserCreateSerializer, ProfessorProfileSerializer,
     PasswordResetRequestSerializer, PasswordResetConfirmSerializer,
     InternalUserUpdateSerializer,
+    ProfessorApplicationSerializer, ProfessorApplicationCreateSerializer,
+    ProfessorApplicationReviewSerializer,
 )
 from .permissions import IsAdminOrDirector, IsAdminDirectorOrProfessor, IsClient
 
@@ -318,6 +320,117 @@ class ProfessorViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = ProfessorProfile.objects.select_related('user')
     serializer_class = ProfessorProfileSerializer
     permission_classes = [AllowAny]
+
+
+def _create_professor_from_application(application, password):
+    """Convierte una postulación aprobada en usuario profesor con perfil."""
+    existing = User.objects.filter(email=application.email).first()
+    bio = application.bio or application.experience[:500]
+
+    if existing:
+        if existing.role in (User.Role.ADMIN, User.Role.DIRECTOR, User.Role.PROFESSOR):
+            raise ValueError('El correo ya pertenece a un usuario interno.')
+        existing.role = User.Role.PROFESSOR
+        existing.first_name = application.first_name
+        existing.last_name = application.last_name
+        existing.phone = application.phone or existing.phone
+        existing.document_type = application.document_type
+        existing.document_number = application.document_number
+        existing.set_password(password)
+        existing.save()
+        user = existing
+    else:
+        user = User(
+            username=application.email,
+            email=application.email,
+            first_name=application.first_name,
+            last_name=application.last_name,
+            role=User.Role.PROFESSOR,
+            phone=application.phone,
+            document_type=application.document_type,
+            document_number=application.document_number,
+        )
+        user.set_password(password)
+        user.save()
+
+    ProfessorProfile.objects.update_or_create(
+        user=user,
+        defaults={'expertise': application.expertise, 'bio': bio},
+    )
+    return user
+
+
+class ProfessorApplicationViewSet(viewsets.ModelViewSet):
+    """Postulaciones para ser profesor: envío público y revisión por admin/director."""
+
+    queryset = ProfessorApplication.objects.select_related('applicant', 'reviewed_by')
+    http_method_names = ['get', 'post', 'head', 'options']
+
+    def get_permissions(self):
+        if self.action == 'create':
+            return [AllowAny()]
+        return [IsAuthenticated(), IsAdminOrDirector()]
+
+    def get_serializer_class(self):
+        if self.action == 'create':
+            return ProfessorApplicationCreateSerializer
+        if self.action in ('approve', 'reject'):
+            return ProfessorApplicationReviewSerializer
+        return ProfessorApplicationSerializer
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        status_param = self.request.query_params.get('status')
+        if status_param:
+            qs = qs.filter(status=status_param)
+        return qs
+
+    @action(detail=True, methods=['post'])
+    def approve(self, request, pk=None):
+        application = self.get_object()
+        if application.status != ProfessorApplication.Status.PENDING:
+            return Response({'error': 'Esta postulación ya fue revisada.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        serializer = ProfessorApplicationReviewSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        password = serializer.validated_data.get('password') or 'admin123'
+
+        try:
+            user = _create_professor_from_application(application, password)
+        except ValueError as exc:
+            return Response({'error': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+
+        application.status = ProfessorApplication.Status.APPROVED
+        application.review_notes = serializer.validated_data.get('review_notes', '')
+        application.reviewed_by = request.user
+        application.reviewed_at = timezone.now()
+        application.save()
+
+        return Response({
+            'message': 'Postulación aprobada. El profesor ya puede iniciar sesión.',
+            'application': ProfessorApplicationSerializer(application).data,
+            'user': UserSerializer(user).data,
+        })
+
+    @action(detail=True, methods=['post'])
+    def reject(self, request, pk=None):
+        application = self.get_object()
+        if application.status != ProfessorApplication.Status.PENDING:
+            return Response({'error': 'Esta postulación ya fue revisada.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        serializer = ProfessorApplicationReviewSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        application.status = ProfessorApplication.Status.REJECTED
+        application.review_notes = serializer.validated_data.get('review_notes', '')
+        application.reviewed_by = request.user
+        application.reviewed_at = timezone.now()
+        application.save()
+
+        return Response({
+            'message': 'Postulación rechazada.',
+            'application': ProfessorApplicationSerializer(application).data,
+        })
 
 
 @api_view(['GET'])

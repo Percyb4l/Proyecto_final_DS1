@@ -23,6 +23,8 @@ import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
 import ProfilePage from './pages/ProfilePage';
 import ChoreographyFormPage from './pages/ChoreographyFormPage';
+import ProfessorApplyPage from './pages/ProfessorApplyPage';
+import AdminProfessorApplicationsPage from './pages/AdminProfessorApplicationsPage';
 import { getAccountPath } from './utils/auth';
 
 /** Redirige a login si no hay sesión o si el rol no está permitido. */
@@ -43,6 +45,7 @@ function AppRoutes() {
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       <Route path="/reset-password" element={<ResetPasswordPage />} />
       <Route path="/register" element={<RegisterPage />} />
+      <Route path="/apply-professor" element={<ProfessorApplyPage />} />
       <Route path="/profile" element={<PrivateRoute><ProfilePage /></PrivateRoute>} />
       <Route path="/cart" element={<PrivateRoute roles={['client']}><CartPage /></PrivateRoute>} />
       <Route path="/checkout" element={<PrivateRoute roles={['client']}><CheckoutPage /></PrivateRoute>} />
@@ -56,6 +59,7 @@ function AppRoutes() {
       <Route path="/admin/choreographies/:id/edit" element={<PrivateRoute roles={['admin', 'director', 'professor']}><ChoreographyFormPage /></PrivateRoute>} />
       <Route path="/admin/sales" element={<PrivateRoute roles={['admin', 'director']}><AdminSalesPage /></PrivateRoute>} />
       <Route path="/admin/professors" element={<PrivateRoute roles={['admin', 'director']}><AdminProfessorsPage /></PrivateRoute>} />
+      <Route path="/admin/applications" element={<PrivateRoute roles={['admin', 'director']}><AdminProfessorApplicationsPage /></PrivateRoute>} />
       <Route path="/admin/settings" element={<PrivateRoute roles={['admin', 'director']}><AdminSettingsPage /></PrivateRoute>} />
       <Route path="*" element={<Navigate to="/" />} />
     </Routes>

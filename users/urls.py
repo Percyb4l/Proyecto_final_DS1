@@ -8,6 +8,7 @@ from . import views
 router = DefaultRouter()
 router.register('internal', views.InternalUserViewSet, basename='internal-users')
 router.register('professors', views.ProfessorViewSet, basename='professors')
+router.register('professor-applications', views.ProfessorApplicationViewSet, basename='professor-applications')
 
 urlpatterns = [
     path('captcha/', views.get_captcha, name='captcha'),

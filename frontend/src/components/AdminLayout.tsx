@@ -3,9 +3,9 @@
  */
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { LayoutDashboard, Users, Music, ShoppingBag, GraduationCap, Settings, LogOut } from 'lucide-react';
+import { LayoutDashboard, Users, Music, ShoppingBag, GraduationCap, Settings, LogOut, ClipboardList } from 'lucide-react';
 
-const links = [
+const baseLinks = [
   { to: '/admin', icon: LayoutDashboard, label: 'Dashboard', exact: true },
   { to: '/admin/users', icon: Users, label: 'Usuarios' },
   { to: '/admin/choreographies', icon: Music, label: 'Coreografías' },
@@ -14,9 +14,18 @@ const links = [
   { to: '/admin/settings', icon: Settings, label: 'Configuración' },
 ];
 
+const directorLinks = [
+  { to: '/admin/applications', icon: ClipboardList, label: 'Postulaciones' },
+];
+
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const { user, logout } = useAuth();
   const location = useLocation();
+
+  const isDirectorPanel = user?.role === 'admin' || user?.role === 'director';
+  const links = isDirectorPanel
+    ? [...baseLinks.slice(0, 5), ...directorLinks, ...baseLinks.slice(5)]
+    : baseLinks.filter((l) => l.to !== '/admin/sales' && l.to !== '/admin/users');
 
   const isActive = (to: string, exact?: boolean) =>
     exact ? location.pathname === to : location.pathname.startsWith(to);
