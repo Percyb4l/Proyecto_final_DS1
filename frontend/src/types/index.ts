@@ -6,10 +6,17 @@ export interface User {
   last_name: string;
   full_name: string;
   role: 'admin' | 'director' | 'professor' | 'client';
+  document_type?: string;
+  document_number?: string;
+  gender?: string;
+  birth_date?: string;
   phone?: string;
   billing_address?: string;
   city?: string;
-  document_number?: string;
+  department?: string;
+  country?: string;
+  expertise?: string;
+  bio?: string;
 }
 
 export interface ChoreographyVideo {
@@ -32,6 +39,7 @@ export interface Choreography {
   thumbnail_emoji: string;
   rating: number | string;
   professor_name: string;
+  guest_professor?: number | null;
   guest_professor_external?: string;
   video_count: number;
   videos?: ChoreographyVideo[];
