@@ -77,7 +77,7 @@ export default function AdminDashboardPage() {
               <YAxis stroke="#999" tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} />
               <Tooltip
                 contentStyle={tooltipStyle}
-                formatter={(value: number) => [formatPrice(value), 'Ingresos']}
+                formatter={(value) => [formatPrice(Number(value ?? 0)), 'Ingresos']}
               />
               <Bar dataKey="amount" fill="#FF6B1A" radius={[8, 8, 0, 0]} />
             </BarChart>
@@ -91,7 +91,7 @@ export default function AdminDashboardPage() {
               <CartesianGrid strokeDasharray="3 3" stroke="#333" />
               <XAxis dataKey="month" stroke="#999" />
               <YAxis stroke="#999" allowDecimals={false} />
-              <Tooltip contentStyle={tooltipStyle} formatter={(value: number) => [value, 'Clientes']} />
+              <Tooltip contentStyle={tooltipStyle} formatter={(value) => [Number(value ?? 0), 'Clientes']} />
               <Line type="monotone" dataKey="count" stroke="#E91E8C" strokeWidth={3} dot={{ fill: '#E91E8C', r: 5 }} />
             </LineChart>
           </ResponsiveContainer>
@@ -115,7 +115,7 @@ export default function AdminDashboardPage() {
               </Pie>
               <Tooltip
                 contentStyle={tooltipStyle}
-                formatter={(value: number) => [formatPrice(value), 'Ingresos']}
+                formatter={(value) => [formatPrice(Number(value ?? 0)), 'Ingresos']}
               />
               <Legend wrapperStyle={{ color: '#FFF8F0' }} iconType="circle" />
             </PieChart>
@@ -139,7 +139,7 @@ export default function AdminDashboardPage() {
                   <Cell key={i} fill={COLORS[i % COLORS.length]} />
                 ))}
               </Pie>
-              <Tooltip contentStyle={tooltipStyle} formatter={(value: number) => [value, 'Clientes']} />
+              <Tooltip contentStyle={tooltipStyle} formatter={(value) => [Number(value ?? 0), 'Clientes']} />
               <Legend wrapperStyle={{ color: '#FFF8F0' }} iconType="circle" />
             </PieChart>
           </ResponsiveContainer>
