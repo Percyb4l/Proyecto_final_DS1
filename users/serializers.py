@@ -12,6 +12,8 @@ from .models import User, ProfessorProfile, ProfessorApplication
 
 class UserSerializer(serializers.ModelSerializer):
     full_name = serializers.ReadOnlyField()
+    expertise = serializers.SerializerMethodField()
+    bio = serializers.SerializerMethodField()
 
     class Meta:
         model = User
@@ -19,8 +21,21 @@ class UserSerializer(serializers.ModelSerializer):
             'id', 'username', 'email', 'first_name', 'last_name', 'full_name',
             'role', 'document_type', 'document_number', 'gender', 'birth_date',
             'phone', 'billing_address', 'city', 'department', 'country',
+            'expertise', 'bio',
         ]
         read_only_fields = ['id']
+
+    def get_expertise(self, obj):
+        try:
+            return obj.professor_profile.expertise
+        except ProfessorProfile.DoesNotExist:
+            return ''
+
+    def get_bio(self, obj):
+        try:
+            return obj.professor_profile.bio
+        except ProfessorProfile.DoesNotExist:
+            return ''
 
 
 class MeProfileSerializer(serializers.ModelSerializer):
@@ -46,20 +61,32 @@ class ProfessorProfileSerializer(serializers.ModelSerializer):
         fields = ['id', 'user', 'expertise', 'bio', 'hire_date']
 
 
+def _validate_captcha(data):
+    if not CaptchaStore.objects.filter(
+        hashkey=data['captcha_key'],
+        response=data['captcha_value'].lower(),
+    ).exists():
+        raise serializers.ValidationError({'captcha': 'CAPTCHA incorrecto'})
+    return data
+
+
 class RegisterSerializer(serializers.ModelSerializer):
-    """Registro público de clientes con validación de contraseñas y documento único."""
+    """Registro público de clientes con validación de contraseñas, documento y CAPTCHA."""
 
     password = serializers.CharField(write_only=True, min_length=6)
     password_confirm = serializers.CharField(write_only=True)
+    captcha_key = serializers.CharField(write_only=True)
+    captcha_value = serializers.CharField(write_only=True)
 
     class Meta:
         model = User
         fields = [
-            'email', 'password', 'password_confirm', 'first_name', 'last_name',
-            'document_type', 'document_number', 'phone',
+            'email', 'password', 'password_confirm', 'captcha_key', 'captcha_value',
+            'first_name', 'last_name', 'document_type', 'document_number', 'phone',
         ]
 
     def validate(self, data):
+        _validate_captcha(data)
         if data['password'] != data['password_confirm']:
             raise serializers.ValidationError({'password_confirm': 'Las contraseñas no coinciden'})
         if User.objects.filter(email=data['email']).exists():
@@ -70,6 +97,8 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         validated_data.pop('password_confirm')
+        validated_data.pop('captcha_key')
+        validated_data.pop('captcha_value')
         password = validated_data.pop('password')
         email = validated_data.pop('email')
         user = User(
@@ -119,6 +148,8 @@ class InternalUserUpdateSerializer(serializers.ModelSerializer):
     """Actualización de usuarios; contraseña opcional."""
 
     password = serializers.CharField(write_only=True, required=False, min_length=6)
+    expertise = serializers.CharField(required=False, allow_blank=True, write_only=True)
+    bio = serializers.CharField(required=False, allow_blank=True, write_only=True)
 
     class Meta:
         model = User
@@ -126,15 +157,25 @@ class InternalUserUpdateSerializer(serializers.ModelSerializer):
             'email', 'password', 'first_name', 'last_name', 'role',
             'document_type', 'document_number', 'gender', 'birth_date',
             'phone', 'billing_address', 'city', 'department', 'country',
+            'expertise', 'bio',
         ]
 
     def update(self, instance, validated_data):
+        expertise = validated_data.pop('expertise', None)
+        bio = validated_data.pop('bio', None)
         password = validated_data.pop('password', None)
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
         if password:
             instance.set_password(password)
         instance.save()
+        if instance.role == User.Role.PROFESSOR and (expertise is not None or bio is not None):
+            profile, _ = ProfessorProfile.objects.get_or_create(user=instance)
+            if expertise is not None:
+                profile.expertise = expertise
+            if bio is not None:
+                profile.bio = bio
+            profile.save()
         return instance
 
 
@@ -147,8 +188,7 @@ class LoginSerializer(serializers.Serializer):
     captcha_value = serializers.CharField()
 
     def validate(self, data):
-        if not CaptchaStore.objects.filter(hashkey=data['captcha_key'], response=data['captcha_value'].lower()).exists():
-            raise serializers.ValidationError({'captcha': 'CAPTCHA incorrecto'})
+        _validate_captcha(data)
 
         user = authenticate(username=data['email'], password=data['password'])
         if not user:

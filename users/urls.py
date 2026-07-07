@@ -19,5 +19,7 @@ urlpatterns = [
     path('password-reset/confirm/', views.password_reset_confirm, name='password-reset-confirm'),
     path('dashboard/admin/', views.admin_dashboard, name='admin-dashboard'),
     path('dashboard/client/', views.client_dashboard, name='client-dashboard'),
+    path('dashboard/professor/', views.professor_dashboard, name='professor-dashboard'),
+    path('public-stats/', views.public_stats, name='public-stats'),
     path('', include(router.urls)),
 ]

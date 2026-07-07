@@ -285,7 +285,7 @@ class InternalUserViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated, IsAdminOrDirector]
 
     def get_queryset(self):
-        qs = User.objects.all()
+        qs = User.objects.select_related('professor_profile').all()
         role = self.request.query_params.get('role')
         search = self.request.query_params.get('search')
         if role:
@@ -431,6 +431,103 @@ class ProfessorApplicationViewSet(viewsets.ModelViewSet):
             'message': 'Postulación rechazada.',
             'application': ProfessorApplicationSerializer(application).data,
         })
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def public_stats(request):
+    """Estadísticas públicas para la landing page."""
+    from choreographies.models import Choreography
+    from django.db.models import Avg
+
+    published = Choreography.objects.filter(status=Choreography.Status.PUBLISHED)
+    professors_count = User.objects.filter(role=User.Role.PROFESSOR, is_active=True).count()
+    avg_rating = published.aggregate(avg=Avg('rating'))['avg'] or 0
+
+    return Response({
+        'choreographies_count': published.count(),
+        'professors_count': professors_count,
+        'average_rating': round(float(avg_rating), 1),
+    })
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated, IsAdminDirectorOrProfessor])
+def professor_dashboard(request):
+    """Dashboard del profesor con métricas reales de sus coreografías."""
+    from choreographies.models import Choreography
+    from choreographies.serializers import ChoreographySerializer
+    from sales.models import SaleItem
+    from django.db.models.functions import TruncMonth
+
+    if request.user.role not in (User.Role.PROFESSOR, User.Role.ADMIN, User.Role.DIRECTOR):
+        return Response({'detail': 'No autorizado'}, status=status.HTTP_403_FORBIDDEN)
+
+    choreos_qs = Choreography.objects.filter(main_professor=request.user).prefetch_related('videos')
+    if request.user.role in (User.Role.ADMIN, User.Role.DIRECTOR):
+        choreos_qs = Choreography.objects.all().prefetch_related('videos')
+
+    choreos = list(choreos_qs)
+    total_students = sum(c.sales_count for c in choreos)
+    total_revenue = sum(float(c.price) * c.sales_count for c in choreos)
+    avg_rating = (
+        sum(float(c.rating) for c in choreos) / len(choreos) if choreos else 0
+    )
+
+    genre_labels = {
+        'salsa': 'Salsa', 'bachata': 'Bachata', 'hip_hop': 'Hip-Hop',
+        'merengue': 'Merengue', 'pop': 'Pop', 'reggaeton': 'Reggaeton',
+        'contemporaneo': 'Contemporáneo',
+    }
+    sales_by_genre = {}
+    for choreo in choreos:
+        label = genre_labels.get(choreo.genre, choreo.genre)
+        sales_by_genre[label] = sales_by_genre.get(label, 0) + choreo.sales_count
+
+    genre_chart = [
+        {'genre': label, 'ventas': count}
+        for label, count in sorted(sales_by_genre.items(), key=lambda x: -x[1])
+    ]
+
+    choreography_sales = [
+        {'title': c.title[:20], 'ventas': c.sales_count}
+        for c in sorted(choreos, key=lambda x: -x.sales_count)[:6]
+    ]
+
+    choreo_ids = [c.id for c in choreos]
+    monthly = list(
+        SaleItem.objects.filter(
+            choreography_id__in=choreo_ids,
+            sale__status='completed',
+        )
+        .annotate(month=TruncMonth('sale__created_at'))
+        .values('month')
+        .annotate(ventas=Count('id'))
+        .order_by('month')[:6]
+    )
+    month_names = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
+    monthly_sales = [
+        {'month': month_names[m['month'].month - 1], 'ventas': m['ventas']}
+        for m in monthly
+    ]
+    if not monthly_sales:
+        monthly_sales = [{'month': m, 'ventas': 0} for m in month_names[:6]]
+
+    return Response({
+        'greeting': request.user.first_name,
+        'metrics': {
+            'choreographies_count': len(choreos),
+            'total_students': total_students,
+            'total_revenue': total_revenue,
+            'average_rating': round(avg_rating, 1),
+        },
+        'charts': {
+            'monthly_sales': monthly_sales,
+            'sales_by_genre': genre_chart,
+            'choreography_sales': choreography_sales,
+        },
+        'choreographies': ChoreographySerializer(choreos, many=True).data,
+    })
 
 
 @api_view(['GET'])

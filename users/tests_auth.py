@@ -9,6 +9,11 @@ User = get_user_model()
 
 
 class RegisterTests(APITestCase):
+    def _valid_captcha_payload(self):
+        key = CaptchaStore.generate_key()
+        captcha = CaptchaStore.objects.get(hashkey=key)
+        return {'captcha_key': key, 'captcha_value': captcha.response}
+
     def test_register_creates_client_user(self):
         response = self.client.post(
             reverse('register'),
@@ -21,6 +26,7 @@ class RegisterTests(APITestCase):
                 'document_type': 'CC',
                 'document_number': '1234567890',
                 'phone': '3001112233',
+                **self._valid_captcha_payload(),
             },
             format='json',
         )
@@ -50,6 +56,7 @@ class RegisterTests(APITestCase):
                 'last_name': 'User',
                 'document_type': 'CC',
                 'document_number': '9876543210',
+                **self._valid_captcha_payload(),
             },
             format='json',
         )
@@ -66,6 +73,7 @@ class RegisterTests(APITestCase):
                 'last_name': 'User',
                 'document_type': 'CC',
                 'document_number': '1122334455',
+                **self._valid_captcha_payload(),
             },
             format='json',
         )
@@ -128,3 +136,12 @@ class CaptchaTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn('captcha_key', response.data)
         self.assertIn('captcha_image', response.data)
+
+
+class PublicStatsTests(APITestCase):
+    def test_public_stats_returns_counts(self):
+        response = self.client.get(reverse('public-stats'))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('choreographies_count', response.data)
+        self.assertIn('professors_count', response.data)
+        self.assertIn('average_rating', response.data)
