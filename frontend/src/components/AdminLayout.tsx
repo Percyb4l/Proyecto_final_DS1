@@ -5,7 +5,9 @@ import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { LayoutDashboard, Users, Music, ShoppingBag, GraduationCap, Settings, LogOut, ClipboardList } from 'lucide-react';
 
-const baseLinks = [
+type NavLink = { to: string; icon: typeof LayoutDashboard; label: string; exact?: boolean };
+
+const baseLinks: NavLink[] = [
   { to: '/admin', icon: LayoutDashboard, label: 'Dashboard', exact: true },
   { to: '/admin/users', icon: Users, label: 'Usuarios' },
   { to: '/admin/choreographies', icon: Music, label: 'Coreografías' },
@@ -14,7 +16,7 @@ const baseLinks = [
   { to: '/admin/settings', icon: Settings, label: 'Configuración' },
 ];
 
-const directorLinks = [
+const directorLinks: NavLink[] = [
   { to: '/admin/applications', icon: ClipboardList, label: 'Postulaciones' },
 ];
 
@@ -23,7 +25,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const location = useLocation();
 
   const isDirectorPanel = user?.role === 'admin' || user?.role === 'director';
-  const links = isDirectorPanel
+  const links: NavLink[] = isDirectorPanel
     ? [...baseLinks.slice(0, 5), ...directorLinks, ...baseLinks.slice(5)]
     : baseLinks.filter((l) => l.to !== '/admin/sales' && l.to !== '/admin/users');
 

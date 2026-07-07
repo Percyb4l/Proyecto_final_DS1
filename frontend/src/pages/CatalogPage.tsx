@@ -1,11 +1,11 @@
 /**
  * Catálogo público de coreografías.
- * Filtros por género/nivel, búsqueda, ordenamiento y agregar al carrito.
+ * Filtros por género/nivel/profesor, búsqueda, ordenamiento y agregar al carrito.
  */
 import { useEffect, useState } from 'react';
 import { Search, ShoppingCart, Video, ChevronDown } from 'lucide-react';
 import Navbar from '../components/Navbar';
-import { choreoApi, cartApi } from '../services/api';
+import { choreoApi, cartApi, usersApi } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import type { Choreography } from '../types';
 import { GENRE_LABELS, DIFFICULTY_LABELS, formatPrice } from '../types';
@@ -18,6 +18,11 @@ const FILTERS = [
 
 const THUMB_COLORS = ['#FF6B1A', '#E91E8C'];
 
+interface ProfessorOption {
+  id: number;
+  user: { id: number; full_name: string };
+}
+
 function getAddToCartError(e: unknown): string {
   const data = (e as { response?: { data?: Record<string, unknown> } })?.response?.data;
   if (!data) return 'No se pudo conectar con el servidor. Verifica que el backend esté corriendo.';
@@ -29,19 +34,26 @@ function getAddToCartError(e: unknown): string {
 export default function CatalogPage() {
   const { user, isClient } = useAuth();
   const [choreos, setChoreos] = useState<Choreography[]>([]);
+  const [professors, setProfessors] = useState<ProfessorOption[]>([]);
   const [activeFilter, setActiveFilter] = useState('all');
+  const [professorFilter, setProfessorFilter] = useState('');
   const [search, setSearch] = useState('');
   const [sort, setSort] = useState('popular');
+
+  useEffect(() => {
+    usersApi.getProfessors().then((r) => setProfessors(r.data)).catch(() => {});
+  }, []);
 
   const load = () => {
     const params: Record<string, string> = { sort };
     if (search) params.search = search;
+    if (professorFilter) params.professor = professorFilter;
     if (['salsa','bachata','hip_hop','merengue','pop','reggaeton'].includes(activeFilter)) params.genre = activeFilter;
     if (['basic','intermediate','advanced'].includes(activeFilter)) params.difficulty = activeFilter;
     choreoApi.getAll(params).then((r) => setChoreos(r.data)).catch(() => {});
   };
 
-  useEffect(() => { load(); }, [activeFilter, sort]);
+  useEffect(() => { load(); }, [activeFilter, sort, professorFilter]);
 
   const handleAdd = async (id: number) => {
     if (!user) { window.location.href = '/login'; return; }
@@ -73,6 +85,19 @@ export default function CatalogPage() {
               onChange={(e) => setSearch(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && load()}
             />
+          </div>
+          <div className="relative">
+            <select
+              className="input-field w-full md:w-auto appearance-none pr-12 bg-[#242424] cursor-pointer"
+              value={professorFilter}
+              onChange={(e) => setProfessorFilter(e.target.value)}
+            >
+              <option value="">Todos los profesores</option>
+              {professors.map((p) => (
+                <option key={p.id} value={p.user.id}>{p.user.full_name}</option>
+              ))}
+            </select>
+            <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
           </div>
           <div className="relative">
             <select

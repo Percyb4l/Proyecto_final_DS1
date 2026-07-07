@@ -8,13 +8,20 @@ import { usersApi } from '../services/api';
 import type { User } from '../types';
 import { ROLE_LABELS } from '../types';
 
+const EMPTY_FORM = {
+  email: '', password: '', first_name: '', last_name: '', role: 'professor',
+  document_type: 'CC', document_number: '', gender: '', birth_date: '',
+  phone: '', billing_address: '', city: '', department: '', country: 'Colombia',
+  expertise: '', bio: '',
+};
+
 export default function AdminUsersPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [roleFilter, setRoleFilter] = useState('');
   const [search, setSearch] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
-  const [form, setForm] = useState({ email: '', password: '', first_name: '', last_name: '', role: 'professor', document_number: '', phone: '', expertise: '', bio: '' });
+  const [form, setForm] = useState(EMPTY_FORM);
 
   const load = () => {
     const params: Record<string, string> = {};
@@ -35,7 +42,12 @@ export default function AdminUsersPage() {
   const handleUpdate = async () => {
     if (!editingId) return;
     const { password, expertise, bio, ...data } = form;
-    const payload = password ? { ...data, password } : data;
+    const payload: Record<string, string> = { ...data };
+    if (password) payload.password = password;
+    if (form.role === 'professor') {
+      payload.expertise = expertise;
+      payload.bio = bio;
+    }
     await usersApi.updateInternal(editingId, payload);
     setShowForm(false);
     setEditingId(null);
@@ -51,17 +63,24 @@ export default function AdminUsersPage() {
       first_name: user.first_name,
       last_name: user.last_name,
       role: user.role,
+      document_type: user.document_type || 'CC',
       document_number: user.document_number || '',
+      gender: user.gender || '',
+      birth_date: user.birth_date || '',
       phone: user.phone || '',
-      expertise: '',
-      bio: '',
+      billing_address: user.billing_address || '',
+      city: user.city || '',
+      department: user.department || '',
+      country: user.country || 'Colombia',
+      expertise: user.expertise || '',
+      bio: user.bio || '',
     });
   };
 
   const resetForm = () => {
     setShowForm(false);
     setEditingId(null);
-    setForm({ email: '', password: '', first_name: '', last_name: '', role: 'professor', document_number: '', phone: '', expertise: '', bio: '' });
+    setForm(EMPTY_FORM);
   };
 
   const handleDelete = async (id: number) => {
@@ -92,7 +111,7 @@ export default function AdminUsersPage() {
         <div className="card-light p-6 mb-6 grid md:grid-cols-2 gap-4">
           <h2 className="md:col-span-2 font-display text-xl">{editingId ? 'Editar usuario' : 'Nuevo usuario'}</h2>
           <input className="input-field" placeholder="Email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
-          <input className="input-field" placeholder="Contraseña" type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />
+          <input className="input-field" placeholder={editingId ? 'Nueva contraseña (opcional)' : 'Contraseña'} type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />
           <input className="input-field" placeholder="Nombre" value={form.first_name} onChange={(e) => setForm({ ...form, first_name: e.target.value })} />
           <input className="input-field" placeholder="Apellido" value={form.last_name} onChange={(e) => setForm({ ...form, last_name: e.target.value })} />
           <select className="input-field" value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })}>
@@ -101,7 +120,25 @@ export default function AdminUsersPage() {
             <option value="professor">Profesor</option>
             <option value="client">Cliente</option>
           </select>
-          <input className="input-field" placeholder="Documento" value={form.document_number} onChange={(e) => setForm({ ...form, document_number: e.target.value })} />
+          <select className="input-field" value={form.document_type} onChange={(e) => setForm({ ...form, document_type: e.target.value })}>
+            <option value="CC">Cédula de ciudadanía</option>
+            <option value="CE">Cédula de extranjería</option>
+            <option value="TI">Tarjeta de identidad</option>
+            <option value="PP">Pasaporte</option>
+          </select>
+          <input className="input-field" placeholder="Número de documento" value={form.document_number} onChange={(e) => setForm({ ...form, document_number: e.target.value })} />
+          <select className="input-field" value={form.gender} onChange={(e) => setForm({ ...form, gender: e.target.value })}>
+            <option value="">Género (opcional)</option>
+            <option value="M">Masculino</option>
+            <option value="F">Femenino</option>
+            <option value="O">Otro</option>
+          </select>
+          <input className="input-field" type="date" placeholder="Fecha de nacimiento" value={form.birth_date} onChange={(e) => setForm({ ...form, birth_date: e.target.value })} />
+          <input className="input-field" placeholder="Teléfono" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
+          <input className="input-field md:col-span-2" placeholder="Dirección" value={form.billing_address} onChange={(e) => setForm({ ...form, billing_address: e.target.value })} />
+          <input className="input-field" placeholder="Ciudad" value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} />
+          <input className="input-field" placeholder="Departamento" value={form.department} onChange={(e) => setForm({ ...form, department: e.target.value })} />
+          <input className="input-field" placeholder="País" value={form.country} onChange={(e) => setForm({ ...form, country: e.target.value })} />
           {form.role === 'professor' && (
             <>
               <input className="input-field" placeholder="Especialidad" value={form.expertise} onChange={(e) => setForm({ ...form, expertise: e.target.value })} />
@@ -119,7 +156,7 @@ export default function AdminUsersPage() {
         <table className="w-full">
           <thead>
             <tr className="border-b border-[#333] text-left text-xs text-gray-500 uppercase">
-              <th className="p-4">Nombre</th><th className="p-4">Email</th><th className="p-4">Rol</th><th className="p-4">Documento</th><th className="p-4">Acciones</th>
+              <th className="p-4">Nombre</th><th className="p-4">Email</th><th className="p-4">Rol</th><th className="p-4">Documento</th><th className="p-4">Ciudad</th><th className="p-4">Acciones</th>
             </tr>
           </thead>
           <tbody>
@@ -129,6 +166,7 @@ export default function AdminUsersPage() {
                 <td className="p-4 text-gray-400">{u.email}</td>
                 <td className="p-4 text-[#E91E8C]">{ROLE_LABELS[u.role] || u.role}</td>
                 <td className="p-4">{u.document_number}</td>
+                <td className="p-4 text-gray-400">{u.city || '—'}</td>
                 <td className="p-4 flex gap-3">
                   <button type="button" onClick={() => startEdit(u)} className="text-[#FF6B1A]"><Pencil className="w-4 h-4" /></button>
                   <button type="button" onClick={() => handleDelete(u.id)} className="text-red-400"><Trash2 className="w-4 h-4" /></button>

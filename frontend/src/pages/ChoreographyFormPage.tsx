@@ -6,7 +6,7 @@ import type { FormEvent } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Plus, Trash2 } from 'lucide-react';
 import AdminLayout from '../components/AdminLayout';
-import { choreoApi } from '../services/api';
+import { choreoApi, usersApi } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { GENRE_LABELS, DIFFICULTY_LABELS } from '../types';
 
@@ -31,9 +31,15 @@ export default function ChoreographyFormPage() {
   const [error, setError] = useState('');
   const [form, setForm] = useState({
     title: '', song_name: '', genre: 'salsa', difficulty: 'basic',
-    description: '', price: '', thumbnail_emoji: '💃', guest_professor_external: '',
+    description: '', price: '', thumbnail_emoji: '💃',
+    guest_professor: '' as string | number, guest_professor_external: '',
   });
+  const [professors, setProfessors] = useState<{ id: number; user: { id: number; full_name: string } }[]>([]);
   const [videos, setVideos] = useState<VideoForm[]>([emptyVideo(1), emptyVideo(2), emptyVideo(3), emptyVideo(4)]);
+
+  useEffect(() => {
+    usersApi.getProfessors().then((r) => setProfessors(r.data)).catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (!isEdit || !id) return;
@@ -42,10 +48,11 @@ export default function ChoreographyFormPage() {
       setForm({
         title: c.title, song_name: c.song_name, genre: c.genre, difficulty: c.difficulty,
         description: c.description || '', price: String(c.price), thumbnail_emoji: c.thumbnail_emoji || '💃',
+        guest_professor: c.guest_professor ?? '',
         guest_professor_external: c.guest_professor_external || '',
       });
       if (c.videos?.length) {
-        setVideos(c.videos.map((v) => ({
+        setVideos(c.videos.map((v: { part_number: number; title: string; video_url: string }) => ({
           part_number: v.part_number,
           title: v.title,
           video_url: v.video_url,
@@ -61,6 +68,8 @@ export default function ChoreographyFormPage() {
     const payload = {
       ...form,
       price: Number(form.price),
+      guest_professor: form.guest_professor ? Number(form.guest_professor) : null,
+      guest_professor_external: form.guest_professor ? '' : form.guest_professor_external,
       videos: videos.filter((v) => v.title.trim()),
     };
     try {
@@ -99,7 +108,27 @@ export default function ChoreographyFormPage() {
             </select>
             <input className="input-field" placeholder="Precio (COP)" type="number" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} required />
             <input className="input-field" placeholder="Emoji" value={form.thumbnail_emoji} onChange={(e) => setForm({ ...form, thumbnail_emoji: e.target.value })} />
-            <input className="input-field md:col-span-2" placeholder="Profesor invitado externo (opcional)" value={form.guest_professor_external} onChange={(e) => setForm({ ...form, guest_professor_external: e.target.value })} />
+            <select
+              className="input-field"
+              value={form.guest_professor}
+              onChange={(e) => setForm({
+                ...form,
+                guest_professor: e.target.value,
+                guest_professor_external: e.target.value ? '' : form.guest_professor_external,
+              })}
+            >
+              <option value="">Profesor invitado interno (opcional)</option>
+              {professors.map((p) => (
+                <option key={p.id} value={p.user.id}>{p.user.full_name}</option>
+              ))}
+            </select>
+            <input
+              className="input-field md:col-span-2"
+              placeholder="Profesor invitado externo (opcional)"
+              value={form.guest_professor_external}
+              disabled={Boolean(form.guest_professor)}
+              onChange={(e) => setForm({ ...form, guest_professor_external: e.target.value, guest_professor: '' })}
+            />
             <textarea className="input-field md:col-span-2 min-h-[100px]" placeholder="Descripción" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
           </div>
 

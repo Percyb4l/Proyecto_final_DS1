@@ -25,6 +25,12 @@ export default function CartPage() {
     load();
   };
 
+  const handleClear = async () => {
+    if (!confirm('¿Vaciar todo el carrito?')) return;
+    await cartApi.clear();
+    load();
+  };
+
   const subtotal = cart?.total || 0;
   const tax = subtotal * 0.19;
   const total = subtotal + tax;
@@ -42,7 +48,14 @@ export default function CartPage() {
     <div className="min-h-screen bg-[#1A1A1A]">
       <Navbar />
       <div className="pt-24 px-6 pb-20 max-w-7xl mx-auto">
-        <h1 className="font-display text-5xl tracking-wide mb-8">CARRITO DE COMPRAS</h1>
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="font-display text-5xl tracking-wide">CARRITO DE COMPRAS</h1>
+          {cart.items.length > 0 && (
+            <button type="button" onClick={handleClear} className="text-sm text-red-400 hover:text-red-300 border border-red-400/30 px-4 py-2 rounded-full">
+              Vaciar carrito
+            </button>
+          )}
+        </div>
 
         {cart.items.length === 0 ? (
           <div className="card-light p-12 text-center">

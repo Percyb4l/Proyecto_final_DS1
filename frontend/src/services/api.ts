@@ -4,7 +4,10 @@
  */
 import axios from 'axios';
 
-const api = axios.create({ baseURL: '/api', headers: { 'Content-Type': 'application/json' } });
+const api = axios.create({
+  baseURL: import.meta.env.VITE_API_URL || '/api',
+  headers: { 'Content-Type': 'application/json' },
+});
 
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('access');
@@ -67,10 +70,12 @@ export const salesApi = {
   allSales: () => api.get('/sales/all/'),
 };
 
-/** Métricas de dashboards admin y cliente. */
+/** Métricas de dashboards admin, cliente y profesor; estadísticas públicas. */
 export const dashboardApi = {
   admin: () => api.get('/auth/dashboard/admin/'),
   client: () => api.get('/auth/dashboard/client/'),
+  professor: () => api.get('/auth/dashboard/professor/'),
+  publicStats: () => api.get('/auth/public-stats/'),
 };
 
 /** Gestión de usuarios internos y listado de profesores. */

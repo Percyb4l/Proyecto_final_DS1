@@ -1,11 +1,12 @@
 /**
- * Registro de nuevos clientes.
+ * Registro de nuevos clientes con CAPTCHA real.
  * Crea cuenta vía API y redirige al dashboard del cliente.
  */
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { authApi } from '../services/api';
 import { GoogleButton, FacebookButton, AuthDivider } from '../components/SocialLogin';
 import { formatApiError } from '../utils/apiError';
 
@@ -14,10 +15,23 @@ export default function RegisterPage() {
     firstName: '', lastName: '', email: '', password: '', password_confirm: '',
     document_type: 'CC', document_number: '', phone: '',
   });
+  const [captchaKey, setCaptchaKey] = useState('');
+  const [captchaImage, setCaptchaImage] = useState('');
+  const [captchaValue, setCaptchaValue] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const { register } = useAuth();
   const navigate = useNavigate();
+
+  const loadCaptcha = () => {
+    authApi.getCaptcha().then((r) => {
+      setCaptchaKey(r.data.captcha_key);
+      setCaptchaImage(r.data.captcha_image);
+      setCaptchaValue('');
+    });
+  };
+
+  useEffect(() => { loadCaptcha(); }, []);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -29,11 +43,13 @@ export default function RegisterPage() {
         first_name: form.firstName, last_name: form.lastName,
         email: form.email, password: form.password, password_confirm: form.password_confirm,
         document_type: form.document_type, document_number: form.document_number, phone: form.phone,
+        captcha_key: captchaKey, captcha_value: captchaValue,
       });
       navigate('/dashboard');
     } catch (err: unknown) {
       const axiosErr = err as { response?: { data?: unknown } };
       setError(formatApiError(axiosErr.response?.data, 'Error al registrarse'));
+      loadCaptcha();
     } finally {
       setLoading(false);
     }
@@ -79,7 +95,16 @@ export default function RegisterPage() {
               <input type="email" className="input-field" placeholder="tu@email.com" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} required />
             </div>
             <div>
-              <label className="block text-sm text-gray-300 mb-2">Documento</label>
+              <label className="block text-sm text-gray-300 mb-2">Tipo de documento</label>
+              <select className="input-field" value={form.document_type} onChange={(e) => setForm({ ...form, document_type: e.target.value })}>
+                <option value="CC">Cédula de ciudadanía</option>
+                <option value="CE">Cédula de extranjería</option>
+                <option value="TI">Tarjeta de identidad</option>
+                <option value="PP">Pasaporte</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm text-gray-300 mb-2">Número de documento</label>
               <input className="input-field" placeholder="1234567890" value={form.document_number} onChange={(e) => setForm({ ...form, document_number: e.target.value })} required />
             </div>
             <div>
@@ -95,9 +120,10 @@ export default function RegisterPage() {
               <input type="password" className="input-field" placeholder="••••••••" value={form.password_confirm} onChange={(e) => setForm({ ...form, password_confirm: e.target.value })} required />
             </div>
 
-            <div className="bg-[#111] border border-[#333] rounded-xl p-4 flex items-center gap-3">
-              <input type="checkbox" className="w-5 h-5" required />
-              <span className="text-sm text-gray-400">No soy un robot</span>
+            <div className="flex items-center gap-3">
+              {captchaImage && <img src={captchaImage} alt="CAPTCHA" className="h-12 rounded border border-[#333]" />}
+              <input className="input-field flex-1" placeholder="CAPTCHA" value={captchaValue} onChange={(e) => setCaptchaValue(e.target.value)} required />
+              <button type="button" onClick={loadCaptcha} className="text-[#FF6B1A] text-sm px-2">↻</button>
             </div>
 
             <button type="submit" disabled={loading} className="gradient-btn w-full py-4">

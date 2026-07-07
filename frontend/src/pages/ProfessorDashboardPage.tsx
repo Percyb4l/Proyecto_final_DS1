@@ -1,40 +1,45 @@
 /**
- * Dashboard del profesor: métricas de sus coreografías y acceso al CRUD.
+ * Dashboard del profesor: métricas reales del API y acceso al CRUD.
  */
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Users, Video, DollarSign, Star, Eye } from 'lucide-react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import Navbar from '../components/Navbar';
-import { choreoApi } from '../services/api';
+import { dashboardApi } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import type { Choreography } from '../types';
 import { GENRE_LABELS, formatPrice } from '../types';
 
 const THUMB_COLORS = ['#FF6B1A', '#E91E8C'];
+const PIE_COLORS = ['#FF6B1A', '#E91E8C', '#FFF8F0', '#666', '#444'];
 
-const monthlyStudents = [
-  { month: 'Ene', estudiantes: 45 },
-  { month: 'Feb', estudiantes: 62 },
-  { month: 'Mar', estudiantes: 58 },
-  { month: 'Abr', estudiantes: 78 },
-  { month: 'May', estudiantes: 71 },
-  { month: 'Jun', estudiantes: 89 },
-];
+interface ProfessorDashboard {
+  greeting: string;
+  metrics: {
+    choreographies_count: number;
+    total_students: number;
+    total_revenue: number;
+    average_rating: number;
+  };
+  charts: {
+    monthly_sales: { month: string; ventas: number }[];
+    sales_by_genre: { genre: string; ventas: number }[];
+    choreography_sales: { title: string; ventas: number }[];
+  };
+  choreographies: Choreography[];
+}
 
 export default function ProfessorDashboardPage() {
   const { user } = useAuth();
-  const [choreos, setChoreos] = useState<Choreography[]>([]);
+  const [data, setData] = useState<ProfessorDashboard | null>(null);
 
   useEffect(() => {
-    choreoApi.getAll().then((r) => setChoreos(r.data)).catch(() => {});
+    dashboardApi.professor().then((r) => setData(r.data)).catch(() => {});
   }, []);
 
-  const totalStudents = choreos.reduce((s, c) => s + c.sales_count, 0);
-  const totalRevenue = choreos.reduce((s, c) => s + Number(c.price) * c.sales_count, 0);
-  const avgRating = choreos.length
-    ? choreos.reduce((s, c) => s + Number(c.rating), 0) / choreos.length
-    : 0;
+  const choreos = data?.choreographies ?? [];
+  const metrics = data?.metrics;
 
   return (
     <div className="min-h-screen bg-[#1A1A1A]">
@@ -42,17 +47,17 @@ export default function ProfessorDashboardPage() {
       <div className="pt-24 px-6 pb-20 max-w-7xl mx-auto">
         <div className="mb-12">
           <h1 className="font-display text-5xl md:text-6xl tracking-wide mb-2">
-            ¡HOLA, <span className="text-[#FF6B1A]">{user?.first_name?.toUpperCase()}!</span>
+            ¡HOLA, <span className="text-[#FF6B1A]">{(data?.greeting || user?.first_name || '').toUpperCase()}!</span>
           </h1>
           <p className="text-xl text-gray-400">Panel de instructor — {user?.full_name}</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
           {[
-            { icon: Users, label: 'Estudiantes totales', value: totalStudents },
-            { icon: Video, label: 'Coreografías publicadas', value: choreos.length },
-            { icon: DollarSign, label: 'Ingresos generados', value: formatPrice(totalRevenue) },
-            { icon: Star, label: 'Calificación promedio', value: avgRating.toFixed(1), star: true },
+            { icon: Users, label: 'Estudiantes totales', value: metrics?.total_students ?? 0 },
+            { icon: Video, label: 'Coreografías publicadas', value: metrics?.choreographies_count ?? 0 },
+            { icon: DollarSign, label: 'Ingresos generados', value: formatPrice(metrics?.total_revenue ?? 0) },
+            { icon: Star, label: 'Calificación promedio', value: (metrics?.average_rating ?? 0).toFixed(1), star: true },
           ].map((m) => (
             <div key={m.label} className="card-light p-8">
               <div className="flex items-center gap-3 mb-3">
@@ -67,17 +72,40 @@ export default function ProfessorDashboardPage() {
           ))}
         </div>
 
-        <div className="card-light p-6 mb-12">
-          <h2 className="font-display text-3xl tracking-wide mb-6">NUEVOS ESTUDIANTES POR MES</h2>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={monthlyStudents}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#333" />
-              <XAxis dataKey="month" stroke="#999" />
-              <YAxis stroke="#999" />
-              <Tooltip contentStyle={{ background: '#242424', border: '1px solid #333', borderRadius: 8 }} />
-              <Bar dataKey="estudiantes" fill="#E91E8C" radius={[8, 8, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
+        <div className="grid lg:grid-cols-2 gap-6 mb-12">
+          <div className="card-light p-6">
+            <h2 className="font-display text-2xl tracking-wide mb-6">VENTAS POR MES</h2>
+            <ResponsiveContainer width="100%" height={280}>
+              <BarChart data={data?.charts.monthly_sales ?? []}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#333" />
+                <XAxis dataKey="month" stroke="#999" />
+                <YAxis stroke="#999" />
+                <Tooltip contentStyle={{ background: '#242424', border: '1px solid #333', borderRadius: 8 }} />
+                <Bar dataKey="ventas" fill="#E91E8C" radius={[8, 8, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+          <div className="card-light p-6">
+            <h2 className="font-display text-2xl tracking-wide mb-6">VENTAS POR GÉNERO</h2>
+            <ResponsiveContainer width="100%" height={280}>
+              <PieChart>
+                <Pie
+                  data={data?.charts.sales_by_genre ?? []}
+                  dataKey="ventas"
+                  nameKey="genre"
+                  cx="50%"
+                  cy="50%"
+                  outerRadius={90}
+                  label={({ name, value }) => `${name}: ${value}`}
+                >
+                  {(data?.charts.sales_by_genre ?? []).map((_, i) => (
+                    <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip contentStyle={{ background: '#242424', border: '1px solid #333', borderRadius: 8 }} />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
         </div>
 
         <div className="flex justify-between items-center mb-6">
