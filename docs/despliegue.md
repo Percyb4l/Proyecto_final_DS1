@@ -1,86 +1,116 @@
 # Despliegue en la nube — RITMOFLOW
 
-Guía para desplegar el backend en **Render** y el frontend en **Vercel**, con base de datos **PostgreSQL** (Render o Supabase).
-
-## Arquitectura
+Stack: **Supabase** (PostgreSQL) + **Render** (Django API) + **Vercel** (React).
 
 ```
-[Vercel — React]  →  HTTPS  →  [Render — Django API]  →  [PostgreSQL]
+[Vercel — React]  →  HTTPS  →  [Render — Django]  →  [Supabase — PostgreSQL]
 ```
 
-## 1. Base de datos
+---
 
-### Opción A: Render (incluida en `render.yaml`)
-El archivo `render.yaml` en la raíz crea automáticamente `ritmoflow-db`.
+## Paso 1 — Supabase (base de datos)
 
-### Opción B: Supabase
-1. Crear proyecto en [supabase.com](https://supabase.com)
-2. Copiar la **Connection string** (modo URI)
-3. Usarla como `DATABASE_URL` en Render
+1. Entra a [supabase.com](https://supabase.com) → **New project**
+2. Nombre: `ritmoflow`, región cercana (ej. South America), contraseña segura
+3. Espera a que el proyecto esté listo (~2 min)
+4. **Project Settings → Database → Connection string**
+5. Elige **URI** y modo **Session pooler** (puerto **5432**)
+6. Copia la URL (reemplaza `[YOUR-PASSWORD]` por tu contraseña)
 
-## 2. Backend en Render
+Ejemplo:
+```
+postgresql://postgres.xxxxx:TU_PASSWORD@aws-0-us-east-1.pooler.supabase.com:5432/postgres
+```
 
-1. Conectar el repositorio GitHub en [render.com](https://render.com)
-2. Crear **Blueprint** desde `render.yaml` o un **Web Service** manual:
-   - **Build:** `pip install -r requirements.txt && python manage.py collectstatic --noinput && python manage.py migrate`
-   - **Start:** `gunicorn ritmoflow.wsgi --bind 0.0.0.0:$PORT`
-3. Variables de entorno:
+7. Carga el esquema y datos de prueba (en tu PC):
+
+```powershell
+cd F:\Proyecto_final_DS1
+$env:DATABASE_URL = "postgresql://..."   # tu URI de Supabase
+pip install -r requirements.txt
+python manage.py migrate
+python manage.py seed_data
+```
+
+---
+
+## Paso 2 — Render (backend)
+
+1. Entra a [render.com](https://render.com) → conecta GitHub
+2. **New → Blueprint** → selecciona `Proyecto_final_DS1`
+3. Render lee `render.yaml` y crea el servicio `ritmoflow-api`
+4. Al desplegar, configura estas variables:
 
 | Variable | Valor |
 |----------|-------|
-| `DATABASE_URL` | URI de PostgreSQL |
-| `DJANGO_SECRET_KEY` | Clave segura aleatoria |
+| `DATABASE_URL` | URI de Supabase (paso 1) |
+| `DJANGO_SECRET_KEY` | Clave aleatoria larga |
 | `DEBUG` | `False` |
-| `ALLOWED_HOSTS` | `tu-api.onrender.com` |
+| `ALLOWED_HOSTS` | `ritmoflow-api.onrender.com` |
 | `CORS_ALLOW_ALL_ORIGINS` | `False` |
-| `CORS_ALLOWED_ORIGINS` | `https://tu-app.vercel.app` |
-| `FRONTEND_URL` | `https://tu-app.vercel.app` |
+| `CORS_ALLOWED_ORIGINS` | `https://TU-APP.vercel.app` *(después del paso 3)* |
+| `FRONTEND_URL` | `https://TU-APP.vercel.app` |
 
-4. Tras el despliegue, cargar datos de prueba (opcional):
-   ```bash
-   python manage.py seed_data
-   ```
+5. Verifica el API:
+```
+https://ritmoflow-api.onrender.com/api/health/
+```
+Debe responder: `{"status":"ok","app":"RITMOFLOW"}`
 
-## 3. Frontend en Vercel
+> Si no usaste `seed_data` en el paso 1, en Render → **Shell**:
+> `python manage.py seed_data`
 
-1. Importar el repositorio en [vercel.com](https://vercel.com)
-2. **Root Directory:** `frontend`
-3. **Framework:** Vite
+---
+
+## Paso 3 — Vercel (frontend)
+
+1. Entra a [vercel.com](https://vercel.com) → **Add New Project**
+2. Importa el repo de GitHub
+3. Configuración:
+
+| Campo | Valor |
+|-------|-------|
+| Root Directory | `frontend` |
+| Framework | Vite |
+
 4. Variable de entorno:
 
 | Variable | Valor |
 |----------|-------|
-| `VITE_API_URL` | `https://tu-api.onrender.com/api` |
+| `VITE_API_URL` | `https://ritmoflow-api.onrender.com/api` |
 
-5. El archivo `frontend/vercel.json` configura el enrutamiento SPA.
+5. **Deploy**
 
-## 4. Desarrollo local
+6. Copia la URL de Vercel (ej. `https://proyecto-final-ds1.vercel.app`) y actualiza en **Render**:
+   - `CORS_ALLOWED_ORIGINS`
+   - `FRONTEND_URL`
 
-```bash
-# Backend
-cp .env.example .env   # configurar PostgreSQL local
-pip install -r requirements.txt
-python manage.py migrate
-python manage.py seed_data
-python manage.py runserver
+---
 
-# Frontend
-cd frontend
-npm install
-npm run dev
+## Paso 4 — Verificación
+
+- [ ] `GET .../api/health/` → OK
+- [ ] `GET .../api/auth/public-stats/` → JSON con estadísticas
+- [ ] Landing carga en Vercel
+- [ ] Login con CAPTCHA (`admin@ritmoflow.com` / `admin123`)
+- [ ] Catálogo y carrito funcionan
+
+---
+
+## Script automático (opcional)
+
+```powershell
+$env:DATABASE_URL = "postgresql://..."      # Supabase
+$env:VERCEL_TOKEN = "..."                   # vercel.com/account/tokens
+$env:VITE_API_URL = "https://ritmoflow-api.onrender.com/api"
+.\scripts\deploy.ps1
 ```
 
-El proxy de Vite redirige `/api` → `http://localhost:8000` cuando `VITE_API_URL` está vacío.
-
-## 5. Verificación post-despliegue
-
-- [ ] `GET https://tu-api.onrender.com/api/auth/public-stats/` responde JSON
-- [ ] Login con CAPTCHA funciona
-- [ ] Catálogo carga coreografías
-- [ ] CORS permite peticiones desde Vercel
-- [ ] Checkout completa una compra de prueba
+---
 
 ## Notas
 
-- Render free tier puede tardar ~30s en despertar tras inactividad.
-- Para email de recuperación de contraseña en producción, configurar `EMAIL_BACKEND` y credenciales SMTP en variables de entorno.
+- **Render free:** el servidor puede tardar ~30 s en despertar tras inactividad.
+- **Supabase free:** 500 MB de BD, suficiente para el proyecto.
+- **Correos:** configurar SMTP en Render para recuperación de contraseña en producción.
+- Variables de ejemplo: `.env.production.example`

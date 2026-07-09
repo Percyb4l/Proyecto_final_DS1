@@ -174,7 +174,12 @@ def build_admin_dashboard_stats():
 def get_captcha(request):
     """Genera imagen CAPTCHA para login y formularios públicos."""
     key = CaptchaStore.generate_key()
-    return Response({'captcha_key': key, 'captcha_image': captcha_image_url(key)})
+    image_path = captcha_image_url(key)
+    if image_path.startswith('http'):
+        image_url = image_path
+    else:
+        image_url = request.build_absolute_uri(image_path)
+    return Response({'captcha_key': key, 'captcha_image': image_url})
 
 
 class RegisterView(generics.CreateAPIView):
