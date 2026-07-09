@@ -9,6 +9,7 @@
     "dev:backend": "python3 manage.py runserver",
     "dev:frontend": "cd frontend && npm run dev",
     "migrate": "python3 manage.py migrate",
-    "build": "cd frontend && npm run build"
+    "build": "cd frontend && npm run build",
+    "deploy:vercel": "cd frontend && npm run deploy"
   }
 }

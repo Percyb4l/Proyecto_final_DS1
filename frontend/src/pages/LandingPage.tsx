@@ -7,6 +7,7 @@ import { Link } from 'react-router-dom';
 import { Star } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import { choreoApi, dashboardApi } from '../services/api';
+import { asArray } from '../utils/apiData';
 import type { Choreography } from '../types';
 import { GENRE_LABELS, formatPrice } from '../types';
 
@@ -22,8 +23,8 @@ export default function LandingPage() {
   const [stats, setStats] = useState<PublicStats | null>(null);
 
   useEffect(() => {
-    choreoApi.getFeatured().then((r) => setFeatured(r.data)).catch(() => {});
-    choreoApi.getHotSales().then((r) => setHotSales(r.data)).catch(() => {});
+    choreoApi.getFeatured().then((r) => setFeatured(asArray(r.data))).catch(() => {});
+    choreoApi.getHotSales().then((r) => setHotSales(asArray(r.data))).catch(() => {});
     dashboardApi.publicStats().then((r) => setStats(r.data)).catch(() => {});
   }, []);
 

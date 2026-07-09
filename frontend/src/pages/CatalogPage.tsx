@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import { Search, ShoppingCart, Video, ChevronDown } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import { choreoApi, cartApi, usersApi } from '../services/api';
+import { asArray } from '../utils/apiData';
 import { useAuth } from '../context/AuthContext';
 import type { Choreography } from '../types';
 import { GENRE_LABELS, DIFFICULTY_LABELS, formatPrice } from '../types';
@@ -41,7 +42,7 @@ export default function CatalogPage() {
   const [sort, setSort] = useState('popular');
 
   useEffect(() => {
-    usersApi.getProfessors().then((r) => setProfessors(r.data)).catch(() => {});
+    usersApi.getProfessors().then((r) => setProfessors(asArray(r.data))).catch(() => {});
   }, []);
 
   const load = () => {
@@ -50,7 +51,7 @@ export default function CatalogPage() {
     if (professorFilter) params.professor = professorFilter;
     if (['salsa','bachata','hip_hop','merengue','pop','reggaeton'].includes(activeFilter)) params.genre = activeFilter;
     if (['basic','intermediate','advanced'].includes(activeFilter)) params.difficulty = activeFilter;
-    choreoApi.getAll(params).then((r) => setChoreos(r.data)).catch(() => {});
+    choreoApi.getAll(params).then((r) => setChoreos(asArray(r.data))).catch(() => {});
   };
 
   useEffect(() => { load(); }, [activeFilter, sort, professorFilter]);

@@ -5,7 +5,7 @@
 import { useState, useEffect } from 'react';
 import type { FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { authApi } from '../services/api';
+import { authApi, resolveApiUrl } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { GoogleButton, AuthDivider } from '../components/SocialLogin';
 import { getAccountPath } from '../utils/auth';
@@ -25,9 +25,9 @@ export default function LoginPage() {
   const loadCaptcha = () => {
     authApi.getCaptcha().then((r) => {
       setCaptchaKey(r.data.captcha_key);
-      setCaptchaImage(r.data.captcha_image);
+      setCaptchaImage(resolveApiUrl(r.data.captcha_image));
       setCaptchaValue('');
-    });
+    }).catch(() => setError('No se pudo cargar el CAPTCHA. Verifica la conexión con el API.'));
   };
 
   useEffect(() => { loadCaptcha(); }, []);

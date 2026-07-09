@@ -4,8 +4,22 @@
  */
 import axios from 'axios';
 
+const API_BASE = import.meta.env.VITE_API_URL || '/api';
+
+if (import.meta.env.PROD && !import.meta.env.VITE_API_URL) {
+  console.error('VITE_API_URL no está configurada. El frontend no puede conectar al API en producción.');
+}
+
+/** Convierte rutas relativas del API (ej. captcha) en URL absoluta hacia Render. */
+export function resolveApiUrl(path: string): string {
+  if (!path) return '';
+  if (path.startsWith('http')) return path;
+  const origin = API_BASE.replace(/\/api\/?$/, '');
+  return `${origin}${path.startsWith('/') ? path : `/${path}`}`;
+}
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || '/api',
+  baseURL: API_BASE,
   headers: { 'Content-Type': 'application/json' },
 });
 
@@ -16,11 +30,20 @@ api.interceptors.request.use((config) => {
 });
 
 api.interceptors.response.use(
-  (r) => r,
+  (r) => {
+    const contentType = String(r.headers['content-type'] || '');
+    if (r.config.url?.startsWith('/') && contentType.includes('text/html')) {
+      return Promise.reject(new Error('El API devolvió HTML. Configura VITE_API_URL con la URL de Render.'));
+    }
+    return r;
+  },
   (error) => {
     if (error.response?.status === 401 && !window.location.pathname.includes('/login')) {
-      localStorage.clear();
-      window.location.href = '/login';
+      const isBootstrap = error.config?.url?.includes('/auth/me/');
+      if (!isBootstrap) {
+        localStorage.clear();
+        window.location.href = '/login';
+      }
     }
     return Promise.reject(error);
   }

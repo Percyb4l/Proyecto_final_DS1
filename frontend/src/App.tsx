@@ -26,6 +26,7 @@ import ChoreographyFormPage from './pages/ChoreographyFormPage';
 import ProfessorApplyPage from './pages/ProfessorApplyPage';
 import AdminProfessorApplicationsPage from './pages/AdminProfessorApplicationsPage';
 import { getAccountPath } from './utils/auth';
+import ErrorBoundary from './components/ErrorBoundary';
 
 /** Redirige a login si no hay sesión o si el rol no está permitido. */
 function PrivateRoute({ children, roles }: { children: React.ReactNode; roles?: string[] }) {
@@ -68,10 +69,12 @@ function AppRoutes() {
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <AuthProvider>
-        <AppRoutes />
-      </AuthProvider>
-    </BrowserRouter>
+    <ErrorBoundary>
+      <BrowserRouter>
+        <AuthProvider>
+          <AppRoutes />
+        </AuthProvider>
+      </BrowserRouter>
+    </ErrorBoundary>
   );
 }

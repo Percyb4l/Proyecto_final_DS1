@@ -6,7 +6,7 @@ import { useState, useEffect } from 'react';
 import type { FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { authApi } from '../services/api';
+import { authApi, resolveApiUrl } from '../services/api';
 import { GoogleButton, FacebookButton, AuthDivider } from '../components/SocialLogin';
 import { formatApiError } from '../utils/apiError';
 
@@ -26,9 +26,9 @@ export default function RegisterPage() {
   const loadCaptcha = () => {
     authApi.getCaptcha().then((r) => {
       setCaptchaKey(r.data.captcha_key);
-      setCaptchaImage(r.data.captcha_image);
+      setCaptchaImage(resolveApiUrl(r.data.captcha_image));
       setCaptchaValue('');
-    });
+    }).catch(() => setError('No se pudo cargar el CAPTCHA. Verifica la conexión con el API.'));
   };
 
   useEffect(() => { loadCaptcha(); }, []);
